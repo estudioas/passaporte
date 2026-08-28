@@ -51,17 +51,16 @@ No terminal/SSH da Hostinger, a partir da raiz do projeto:
 
 Depois, acesse `/admin/login`. Crie contas individuais; não compartilhe credenciais.
 
-## 6. Ativar HTTPS e Cloudflare
+## 6. Ativar HTTPS e GeoIP
 
-Ative SSL no hPanel e force HTTPS. Para bloquear votos fora do Brasil com informação de país confiável:
+Ative SSL no hPanel e force HTTPS. A hospedagem compartilhada Hostinger oferece GeoIP nativo:
 
-1. coloque o DNS do subdomínio em proxy Cloudflare (nuvem laranja);
-2. mantenha `security.country_header` como `HTTP_CF_IPCOUNTRY`;
+1. mantenha `GeoIPEnable On` no `.htaccess` da raiz;
+2. mantenha `security.country_header` como `GEOIP_COUNTRY_CODE`;
 3. mantenha `allow_unknown_country` como `false`;
-4. bloqueie acesso direto ao IP de origem, quando o plano/painel permitir, aceitando somente a Cloudflare;
-5. teste um acesso brasileiro e um acesso de fora do país antes de abrir a votação.
+4. teste um acesso brasileiro e um acesso de fora do país antes de abrir a votação.
 
-Sem proxy confiável, qualquer cabeçalho de país enviado pelo visitante pode ser falsificado. O sistema foi configurado para rejeitar país ausente em produção.
+O banco GeoIP da Hostinger é atualizado semanalmente. O sistema rejeita país ausente em produção. Se o domínio migrar para Cloudflare, altere o campo para `HTTP_CF_IPCOUNTRY` e aceite cabeçalhos de proxy somente depois de proteger o acesso direto à origem.
 
 ## 7. Ajustar PHP
 
