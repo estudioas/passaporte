@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Passaporte Ruffino Revestir 2026</title>
+  <desc id="desc">Campanha nacional para profissionais de arquitetura e interiores.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d241c"/>
+      <stop offset="1" stop-color="#183e2f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1085" cy="90" r="260" fill="#d4a349" opacity=".18"/>
+  <circle cx="115" cy="600" r="210" fill="#d4a349" opacity=".1"/>
+  <path d="M80 92h1040" stroke="#d4a349" stroke-width="2" opacity=".65"/>
+  <text x="80" y="180" fill="#d4a349" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="700" letter-spacing="5">RUFFINO APRESENTA</text>
+  <text x="80" y="292" fill="#fff" font-family="Georgia,serif" font-size="86" font-weight="700">Passaporte</text>
+  <text x="80" y="382" fill="#fff" font-family="Georgia,serif" font-size="86" font-weight="700">Ruffino Revestir</text>
+  <text x="83" y="454" fill="#f4ead7" font-family="Arial,Helvetica,sans-serif" font-size="30">Inscrições, finalistas e votação auditável</text>
+  <rect x="80" y="505" width="332" height="66" rx="33" fill="#d4a349"/>
+  <text x="246" y="548" text-anchor="middle" fill="#10251d" font-family="Arial,Helvetica,sans-serif" font-size="27" font-weight="700">EDIÇÃO 2026</text>
+</svg>
