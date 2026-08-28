@@ -8,7 +8,8 @@ use App\Core\Audit;
 use App\Core\Security;
 use App\Core\View;
 
-require dirname(__DIR__) . '/app/bootstrap.php';
+defined('BASE_PATH') || define('BASE_PATH', dirname(__DIR__));
+require BASE_PATH . '/app/bootstrap.php';
 
 $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
 $path = parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH) ?: '/';
