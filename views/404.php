@@ -1,0 +1,1 @@
+<section class="hero hero-compact"><span class="eyebrow">Erro 404</span><h1>Esta página não carimbou o passaporte.</h1><p>O endereço pode ter mudado ou não existir.</p><a class="button light" href="/">Voltar ao início</a></section>
