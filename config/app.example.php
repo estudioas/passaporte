@@ -28,9 +28,9 @@ return [
         'result_deadline' => '2026-12-14',
     ],
     'security' => [
-        // Ative somente quando o DNS estiver em proxy Cloudflare e o acesso direto à origem estiver bloqueado.
-        'trust_proxy_headers' => true,
-        'country_header' => 'HTTP_CF_IPCOUNTRY',
+        // A hospedagem compartilhada Hostinger fornece GEOIP_COUNTRY_CODE com GeoIPEnable On.
+        'trust_proxy_headers' => false,
+        'country_header' => 'GEOIP_COUNTRY_CODE',
         'allow_unknown_country' => false,
         'strict_ip_vote_limit' => false,
         'ip_vote_limit' => 3,
