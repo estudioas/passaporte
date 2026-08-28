@@ -5,7 +5,7 @@ use App\Core\Security;
 
 $h = [Security::class, 'h'];
 ?>
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="csrf-token" content="<?= $h(Csrf::token()) ?>"><title><?= $h($title) ?> · Painel Passaporte Ruffino</title><link rel="stylesheet" href="/assets/css/app.css?v=1.0.0"></head>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="csrf-token" content="<?= $h(Csrf::token()) ?>"><title><?= $h($title) ?> · Painel Passaporte Ruffino</title><link rel="stylesheet" href="/assets/css/app.css?v=1.1.0"></head>
 <body class="admin-body">
 <aside class="admin-sidebar">
     <a href="/admin" class="admin-brand"><img src="/assets/img/logo_pr_w.svg" alt="Passaporte Ruffino"><span>Painel de controle</span></a>
