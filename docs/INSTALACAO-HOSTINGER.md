@@ -2,11 +2,12 @@
 
 ## 1. Preparar o subdomínio
 
-No hPanel, crie `passaporte.enquetedigital.com` e escolha como raiz de documentos a pasta `public/` deste projeto. Exemplo:
+No hPanel, crie `passaporte.enquetedigital.com`. Há dois modos suportados:
 
-`/home/SEU_USUARIO/domains/enquetedigital.com/passaporte-app/public`
+- preferencial: aponte a raiz de documentos para a pasta `public/` do projeto;
+- implantação Git da Hostinger: clone o repositório diretamente na raiz pública. O `.htaccess` da raiz encaminha as rotas para `public/index.php` e bloqueia as pastas internas.
 
-Não aponte o subdomínio para a raiz `passaporte-app`, pois `config/`, `storage/` e `database/` não podem ficar públicos.
+Em ambos os modos, confirme que tentativas de acesso a `/config/`, `/database/`, `/storage/` e `/app/` retornam HTTP 403.
 
 ## 2. Enviar os arquivos
 
@@ -15,7 +16,7 @@ Envie a pasta completa para `passaporte-app`, por Gerenciador de Arquivos, SFTP 
 - `public/index.php` é acessível pelo subdomínio;
 - `storage/uploads` existe e recebe permissão `700` ou, se o ambiente exigir, `750`;
 - `config/app.php` recebe permissão `600` ou `640`;
-- a raiz do subdomínio é exatamente `passaporte-app/public`.
+- a raiz do subdomínio é `passaporte-app/public`, ou a raiz do repositório quando usada a implantação Git protegida.
 
 ## 3. Criar e importar o banco
 
