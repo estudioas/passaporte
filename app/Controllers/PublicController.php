@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Audit;
+use App\Core\Auth;
 use App\Core\Campaign;
 use App\Core\Captcha;
 use App\Core\Config;
@@ -24,21 +25,39 @@ final class PublicController
 {
     public function home(): void
     {
+        if (!Auth::user()) {
+            View::render('access-login', [
+                'title' => 'Acesso ao Passaporte Ruffino',
+                'error' => $_SESSION['site_login_error'] ?? null,
+            ], 'admin/layout-guest');
+            unset($_SESSION['site_login_error']);
+            return;
+        }
         $this->logPageView('home');
         $pdo = Database::connection();
         $finalists = $pdo->query('SELECT id, slug, participant_name, project_title, instagram_url, instagram_embed_url, fallback_image_url FROM finalists WHERE active = 1 ORDER BY RAND() LIMIT 3')->fetchAll();
         $_SESSION['vote_page_at'] = time();
-        $ranking = [];
-        if (Settings::bool('public_ranking_enabled', false)) {
-            $ranking = $this->ranking();
-        }
+        $ranking = $this->ranking();
         View::render('home', [
             'title' => 'Vote no projeto finalista',
             'finalists' => $finalists,
             'ranking' => $ranking,
             'votingOpen' => Campaign::isVotingOpen() && count($finalists) === 3,
-            'rankingEnabled' => Settings::bool('public_ranking_enabled', false),
+            'rankingEnabled' => true,
         ]);
+    }
+
+    public function authenticateSite(): never
+    {
+        if (!Csrf::verify($_POST['_csrf'] ?? null)) {
+            $_SESSION['site_login_error'] = 'Sessão expirada. Tente novamente.';
+            Response::redirect('/');
+        }
+        if (Auth::attempt((string) ($_POST['email'] ?? ''), (string) ($_POST['password'] ?? ''))) {
+            Response::redirect('/');
+        }
+        $_SESSION['site_login_error'] = 'Login ou senha inválidos.';
+        Response::redirect('/');
     }
 
     public function captcha(string $scope): never

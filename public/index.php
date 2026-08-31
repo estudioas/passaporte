@@ -49,6 +49,7 @@ $routes = [
         '/admin/inscricoes' => [$admin, 'registrations'],
     ],
     'POST' => [
+        '/acesso' => [$public, 'authenticateSite'],
         '/api/vote' => [$public, 'vote'],
         '/inscricoes' => [$public, 'submitRegistration'],
         '/admin/login' => [$admin, 'authenticate'],

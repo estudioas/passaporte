@@ -12,6 +12,7 @@
   const dialog = document.querySelector('[data-vote-dialog]');
   if (dialog) {
     let selectedId = null;
+    let selectedSocialUrl = '';
     let captchaId = null;
     const feedback = dialog.querySelector('[data-vote-feedback]');
     const confirmButton = dialog.querySelector('[data-confirm-vote]');
@@ -31,16 +32,29 @@
       }
     };
 
+    const submitVoteButton = document.querySelector('[data-submit-vote]');
     document.querySelectorAll('[data-vote-choice]').forEach((button) => {
-      button.addEventListener('click', async () => {
+      button.addEventListener('click', () => {
         selectedId = button.dataset.voteChoice;
-        dialog.querySelector('[data-selected-project]').textContent = button.dataset.voteLabel;
-        dialog.querySelector('[data-vote-confirm-step]').hidden = false;
-        dialog.querySelector('[data-vote-success]').hidden = true;
-        dialog.showModal();
-        await loadCaptcha();
-        captchaInput.focus();
+        selectedSocialUrl = button.dataset.voteSocial || '';
+        document.querySelectorAll('[data-vote-choice]').forEach((item) => {
+          const active = item === button;
+          item.setAttribute('aria-pressed', String(active));
+          item.closest('.candidate-card')?.classList.toggle('selected', active);
+        });
+        if (submitVoteButton) submitVoteButton.disabled = false;
       });
+    });
+
+    submitVoteButton?.addEventListener('click', async () => {
+      if (!selectedId) return;
+      const chosen = document.querySelector(`[data-vote-choice="${CSS.escape(selectedId)}"]`);
+      dialog.querySelector('[data-selected-project]').textContent = chosen?.dataset.voteLabel || '';
+      dialog.querySelector('[data-vote-confirm-step]').hidden = false;
+      dialog.querySelector('[data-vote-success]').hidden = true;
+      dialog.showModal();
+      await loadCaptcha();
+      captchaInput.focus();
     });
 
     dialog.querySelector('[data-change-choice]')?.addEventListener('click', () => dialog.close());
@@ -69,7 +83,10 @@
             dialog.querySelector('[data-vote-success]').hidden = false;
             dialog.querySelector('[data-success-message]').textContent = data.message;
             dialog.querySelector('[data-receipt-code]').textContent = data.receipt;
-            dialog.querySelector('[data-audit-link]').href = `/auditoria?codigo=${encodeURIComponent(data.receipt)}`;
+            const auditLink = dialog.querySelector('[data-audit-link]');
+            if (auditLink) auditLink.href = `/auditoria?codigo=${encodeURIComponent(data.receipt)}`;
+            const socialLink = dialog.querySelector('[data-social-link]');
+            if (socialLink) socialLink.href = selectedSocialUrl || '#';
           }
           return;
         }
@@ -77,7 +94,10 @@
         dialog.querySelector('[data-vote-success]').hidden = false;
         dialog.querySelector('[data-success-message]').textContent = data.message;
         dialog.querySelector('[data-receipt-code]').textContent = data.receipt;
-        dialog.querySelector('[data-audit-link]').href = `/auditoria?codigo=${encodeURIComponent(data.receipt)}`;
+        const auditLink = dialog.querySelector('[data-audit-link]');
+        if (auditLink) auditLink.href = `/auditoria?codigo=${encodeURIComponent(data.receipt)}`;
+        const socialLink = dialog.querySelector('[data-social-link]');
+        if (socialLink) socialLink.href = selectedSocialUrl || '#';
         document.querySelectorAll('[data-vote-choice]').forEach((item) => { item.disabled = true; });
       } catch (_) {
         feedback.textContent = 'A conexão falhou. Seu voto não foi confirmado; tente novamente.';

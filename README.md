@@ -12,6 +12,7 @@ Subsite completo para `passaporte.enquetedigital.com`, construído para hospedag
 - comprovante público e trilha de auditoria encadeada por hash;
 - ranking percentual opcional, sem total absoluto;
 - painel para finalistas, configurações, votos, eventos, inscrições e arquivos;
+- home protegida por login e senha, usando as contas administrativas já cadastradas;
 - inscrição em quatro etapas, com nota fiscal e 3 a 5 fotos;
 - dados pessoais criptografados e arquivos fora da pasta pública;
 - regulamentos para profissionais e para revendas/vendedores;
@@ -26,6 +27,8 @@ Subsite completo para `passaporte.enquetedigital.com`, construído para hospedag
 5. Crie o administrador com `php bin/create-admin.php`.
 6. Troque os três finalistas demonstrativos no painel antes da abertura.
 7. Rode `php tests/health-check.php` e corrija qualquer item marcado como falha.
+
+Enquanto a campanha estiver em preparação, a página inicial exige o mesmo login e senha da área administrativa. Remova o bloqueio no método `PublicController::home()` somente quando a votação puder se tornar pública.
 
 ## Requisitos
 

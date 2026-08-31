@@ -1,2 +1,2 @@
 <?php use App\Core\Csrf; use App\Core\Security; $h=[Security::class,'h']; ?>
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title><?= $h($title) ?></title><link rel="stylesheet" href="/assets/css/app.css?v=1.1.0"></head><body class="admin-login-body"><?= $content ?></body></html>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title><?= $h($title) ?></title><link rel="stylesheet" href="/assets/css/app.css?v=2.0.0"></head><body class="admin-login-body"><?= $content ?></body></html>
