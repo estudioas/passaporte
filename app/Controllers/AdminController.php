@@ -236,6 +236,65 @@ final class AdminController
         View::render('admin/registrations', ['title' => 'Inscrições', 'user' => $user, 'registrations' => $rows], 'admin/layout');
     }
 
+    public function users(): void
+    {
+        $user = Auth::requireAdministrator();
+        $rows = Database::connection()->query('SELECT id, name, email, role, active, last_login_at, created_at FROM admin_users ORDER BY active DESC, name ASC')->fetchAll();
+        View::render('admin/users', [
+            'title' => 'Usuários',
+            'user' => $user,
+            'users' => $rows,
+            'message' => $_SESSION['admin_message'] ?? null,
+            'error' => $_SESSION['admin_error'] ?? null,
+        ], 'admin/layout');
+        unset($_SESSION['admin_message'], $_SESSION['admin_error']);
+    }
+
+    public function saveUser(): never
+    {
+        $user = Auth::requireAdministrator();
+        if (!Csrf::verify($_POST['_csrf'] ?? null)) {
+            $_SESSION['admin_error'] = 'Sessão expirada.';
+            Response::redirect('/admin/usuarios');
+        }
+        $id = (int) ($_POST['id'] ?? 0);
+        $name = mb_substr(trim((string) ($_POST['name'] ?? '')), 0, 120);
+        $email = mb_strtolower(trim((string) ($_POST['email'] ?? '')));
+        $password = (string) ($_POST['password'] ?? '');
+        $role = in_array($_POST['role'] ?? '', ['administrator', 'auditor'], true) ? (string) $_POST['role'] : 'auditor';
+        $active = !empty($_POST['active']) ? 1 : 0;
+        if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || ($id < 1 && strlen($password) < 12) || ($password !== '' && strlen($password) < 12)) {
+            $_SESSION['admin_error'] = 'Informe nome, e-mail válido e uma senha com pelo menos 12 caracteres.';
+            Response::redirect('/admin/usuarios');
+        }
+        if ($id === (int) $user['id']) {
+            $active = 1;
+            $role = 'administrator';
+        }
+        $pdo = Database::connection();
+        try {
+            if ($id > 0) {
+                if ($password !== '') {
+                    $stmt = $pdo->prepare('UPDATE admin_users SET name = ?, email = ?, password_hash = ?, role = ?, active = ?, updated_at = NOW() WHERE id = ?');
+                    $stmt->execute([$name, $email, password_hash($password, PASSWORD_DEFAULT), $role, $active, $id]);
+                } else {
+                    $stmt = $pdo->prepare('UPDATE admin_users SET name = ?, email = ?, role = ?, active = ?, updated_at = NOW() WHERE id = ?');
+                    $stmt->execute([$name, $email, $role, $active, $id]);
+                }
+                Audit::log('admin.user_updated', ['user_id' => $id, 'role' => $role, 'active' => $active, 'password_changed' => $password !== ''], 'admin', (int) $user['id']);
+                $_SESSION['admin_message'] = 'Usuário atualizado.';
+            } else {
+                $stmt = $pdo->prepare('INSERT INTO admin_users (name, email, password_hash, role, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())');
+                $stmt->execute([$name, $email, password_hash($password, PASSWORD_DEFAULT), $role, $active]);
+                Audit::log('admin.user_created', ['user_id' => (int) $pdo->lastInsertId(), 'role' => $role], 'admin', (int) $user['id']);
+                $_SESSION['admin_message'] = 'Novo usuário criado.';
+            }
+        } catch (\PDOException $e) {
+            $_SESSION['admin_error'] = $e->getCode() === '23000' ? 'Já existe um usuário com esse e-mail.' : 'Não foi possível salvar o usuário.';
+        }
+        Response::redirect('/admin/usuarios');
+    }
+
     public function registrationFiles(int $registrationId): never
     {
         Auth::requireAdministrator();

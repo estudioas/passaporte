@@ -47,6 +47,7 @@ $routes = [
         '/admin/auditoria/exportar' => [$admin, 'exportAudit'],
         '/admin/configuracoes' => [$admin, 'settings'],
         '/admin/inscricoes' => [$admin, 'registrations'],
+        '/admin/usuarios' => [$admin, 'users'],
     ],
     'POST' => [
         '/acesso' => [$public, 'authenticateSite'],
@@ -58,6 +59,7 @@ $routes = [
         '/admin/finalistas/desativar' => [$admin, 'disableFinalist'],
         '/admin/auditoria/voto' => [$admin, 'updateVote'],
         '/admin/configuracoes' => [$admin, 'saveSettings'],
+        '/admin/usuarios/salvar' => [$admin, 'saveUser'],
     ],
 ];
 
