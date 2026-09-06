@@ -202,6 +202,9 @@ final class AdminController
         View::render('admin/settings', [
             'title' => 'Configurações', 'user' => $user,
             'settings' => [
+                'page_home_enabled' => Settings::bool('page_home_enabled', true),
+                'page_voting_enabled' => Settings::bool('page_voting_enabled', false),
+                'page_jurors_enabled' => Settings::bool('page_jurors_enabled', false),
                 'public_ranking_enabled' => Settings::bool('public_ranking_enabled', false),
                 'voting_manual_closed' => Settings::bool('voting_manual_closed', false),
                 'registration_manual_closed' => Settings::bool('registration_manual_closed', false),
@@ -217,10 +220,10 @@ final class AdminController
         if (!Csrf::verify($_POST['_csrf'] ?? null)) {
             Response::redirect('/admin/configuracoes');
         }
-        foreach (['public_ranking_enabled', 'voting_manual_closed', 'registration_manual_closed'] as $key) {
+        foreach (['public_ranking_enabled', 'voting_manual_closed', 'registration_manual_closed', 'page_home_enabled', 'page_voting_enabled', 'page_jurors_enabled'] as $key) {
             Settings::set($key, !empty($_POST[$key]) ? '1' : '0');
         }
-        Audit::log('admin.settings_updated', ['keys' => ['public_ranking_enabled', 'voting_manual_closed', 'registration_manual_closed']], 'admin', (int) $user['id']);
+        Audit::log('admin.settings_updated', ['keys' => ['public_ranking_enabled', 'voting_manual_closed', 'registration_manual_closed', 'page_home_enabled', 'page_voting_enabled', 'page_jurors_enabled']], 'admin', (int) $user['id']);
         $_SESSION['admin_message'] = 'Configurações atualizadas.';
         Response::redirect('/admin/configuracoes');
     }

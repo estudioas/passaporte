@@ -25,25 +25,43 @@ final class PublicController
 {
     public function home(): void
     {
-        if (!Auth::user()) {
-            View::render('access-login', [
-                'title' => 'Acesso ao Passaporte Ruffino',
-                'error' => $_SESSION['site_login_error'] ?? null,
-            ], 'admin/layout-guest');
-            unset($_SESSION['site_login_error']);
-            return;
-        }
+        if (!$this->pageAvailable('home', true)) return;
         $this->logPageView('home');
+        View::render('home', ['title' => 'Como participar da campanha']);
+    }
+
+    private function pageAvailable(string $page, bool $default = false): bool
+    {
+        if (Settings::bool('page_' . $page . '_enabled', $default)) return true;
+        if (Auth::user()) {
+            header('X-Robots-Tag: noindex, nofollow');
+            return true;
+        }
+        http_response_code(404);
+        View::render('404', ['title' => 'Página indisponível']);
+        return false;
+    }
+
+    public function jurors(): void
+    {
+        if (!$this->pageAvailable('jurors')) return;
+        View::render('jurors', ['title' => 'Comissão julgadora']);
+    }
+
+    public function voting(): void
+    {
+        if (!$this->pageAvailable('voting')) return;
+        $this->logPageView('voting');
         $pdo = Database::connection();
-        $finalists = $pdo->query('SELECT id, slug, participant_name, project_title, instagram_url, instagram_embed_url, fallback_image_url FROM finalists WHERE active = 1 ORDER BY RAND() LIMIT 3')->fetchAll();
+        $finalists = $pdo->query('SELECT id, slug, participant_name, project_title, instagram_url, instagram_embed_url, fallback_image_url FROM finalists WHERE active = 1 ORDER BY RAND()')->fetchAll();
         $_SESSION['vote_page_at'] = time();
         $ranking = $this->ranking();
-        View::render('home', [
+        View::render('voting', [
             'title' => 'Vote no projeto finalista',
             'finalists' => $finalists,
             'ranking' => $ranking,
-            'votingOpen' => Campaign::isVotingOpen() && count($finalists) === 3,
-            'rankingEnabled' => true,
+            'votingOpen' => Campaign::isVotingOpen() && count($finalists) >= 3,
+            'rankingEnabled' => Settings::bool('public_ranking_enabled', false),
         ]);
     }
 
@@ -70,6 +88,9 @@ final class PublicController
 
     public function vote(): never
     {
+        if (!Settings::bool('page_voting_enabled', false)) {
+            Response::json(['ok' => false, 'message' => 'A votação não está disponível.'], 403);
+        }
         if (!Csrf::verify($_POST['_csrf'] ?? null)) {
             Audit::log('vote.rejected', ['reason' => 'csrf'], 'visitor', null, 70);
             Response::json(['ok' => false, 'message' => 'Sessão expirada. Atualize a página.'], 419);
