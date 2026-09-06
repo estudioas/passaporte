@@ -4,7 +4,10 @@ Subsite completo para `passaporte.enquetedigital.com`, construído para hospedag
 
 ## O que está incluído
 
-- home responsiva com três finalistas em ordem aleatória a cada carregamento;
+- home pública com a campanha em três passos e cadastro no site da Ruffino;
+- votação em /votacao e comissão em /jurados, inicialmente inativas;
+- controles de publicação em /admin/configuracoes;
+- finalistas em ordem aleatória a cada carregamento;
 - seleção livre e confirmação definitiva do voto;
 - um voto confirmado por identificador pseudônimo de dispositivo;
 - georrestrição ao Brasil por cabeçalho de país da Cloudflare, com falha fechada;
@@ -12,7 +15,7 @@ Subsite completo para `passaporte.enquetedigital.com`, construído para hospedag
 - comprovante público e trilha de auditoria encadeada por hash;
 - ranking percentual opcional, sem total absoluto;
 - painel para finalistas, configurações, votos, eventos, inscrições e arquivos;
-- home protegida por login e senha, usando as contas administrativas já cadastradas;
+- prévia das páginas desativadas para usuários administrativos autenticados;
 - inscrição em quatro etapas, com nota fiscal e 3 a 5 fotos;
 - dados pessoais criptografados e arquivos fora da pasta pública;
 - regulamentos para profissionais e para revendas/vendedores;
@@ -28,7 +31,7 @@ Subsite completo para `passaporte.enquetedigital.com`, construído para hospedag
 6. Troque os três finalistas demonstrativos no painel antes da abertura.
 7. Rode `php tests/health-check.php` e corrija qualquer item marcado como falha.
 
-Enquanto a campanha estiver em preparação, a página inicial exige o mesmo login e senha da área administrativa. Remova o bloqueio no método `PublicController::home()` somente quando a votação puder se tornar pública.
+No painel, abra Configurações para ativar/desativar Home, Votação e Jurados. Sem configuração salva, apenas a Home fica pública. Páginas inativas retornam 404 para visitantes e podem ser vistas por administradores autenticados. A API rejeita votos quando a página está inativa, inclusive em prévia. O calendário e o fechamento manual continuam sendo respeitados.
 
 ## Requisitos
 

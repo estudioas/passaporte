@@ -33,6 +33,8 @@ Audit::log(
 $routes = [
     'GET' => [
         '/' => [$public, 'home'],
+        '/votacao' => [$public, 'voting'],
+        '/jurados' => [$public, 'jurors'],
         '/inscricoes' => [$public, 'registration'],
         '/regulamento/profissionais' => static fn () => $public->regulations('profissionais'),
         '/regulamento/revendas' => static fn () => $public->regulations('varejo'),

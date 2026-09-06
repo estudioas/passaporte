@@ -10,7 +10,7 @@ final class Campaign
 {
     public static function isVotingOpen(): bool
     {
-        if (Settings::bool('voting_manual_closed', false)) {
+        if (!Settings::bool('page_voting_enabled', false) || Settings::bool('voting_manual_closed', false)) {
             return false;
         }
         $now = new DateTimeImmutable('now');
