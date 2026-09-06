@@ -24,7 +24,7 @@ $baseUrl = rtrim((string) Config::get('app.base_url', ''), '/');
     <meta property="og:image" content="<?= $h($baseUrl . '/assets/img/og-passaporte-ruffino.svg') ?>">
     <title><?= $h($title ?? 'Passaporte Ruffino Revestir 2027') ?> · Passaporte Ruffino</title>
     <link rel="icon" href="/assets/img/logo_pr_b.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/assets/css/app.css?v=3.0.0">
+    <link rel="stylesheet" href="/assets/css/app.css?v=3.1.0">
 </head>
 <body class="campaign-v2">
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
