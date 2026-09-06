@@ -1,84 +1,27 @@
-<?php
-
-use App\Core\Security;
-
-$h = [Security::class, 'h'];
-$defaultImages = [
-    '/assets/img/finalista-ambiente-01-v2.jpg',
-    '/assets/img/finalista-ambiente-02-v2.jpg',
-    '/assets/img/finalista-ambiente-03-v2.jpg',
-];
-?>
-<section id="top" class="passport-hero">
-    <div class="blueprint" aria-hidden="true"></div>
-    <div class="passport-hero-copy">
-        <span class="passport-eyebrow">#PassaporteRuffino</span>
-        <h1>Seu voto pode levar um projeto <em>mais longe.</em></h1>
-        <p>Conheça os três projetos finalistas e escolha aquele que merece embarcar para a Expo Revestir 2027.</p>
-        <a class="passport-primary-cta" href="#votacao">Conheça os finalistas <span>↓</span></a>
-    </div>
-    <div class="passport-hero-photo">
-        <img src="/assets/img/hero-viagem-v2.jpg" alt="Mala de viagem com materiais de arquitetura e amostras de acabamento">
-        <div class="passport-stamp">VOTAÇÃO<br><strong>POPULAR</strong><small>2027</small></div>
-    </div>
+<section class="passport-hero campaign-home">
+ <div class="passport-hero-copy">
+  <span class="passport-eyebrow dark">#<span class="tag-keyword">Passaporte</span>Ruffino</span>
+  <h1>Seu projeto pode levar você <em>mais longe.</em></h1>
+  <p>Transformou um ambiente com piso vinílico Ruffino? Seu projeto pode ganhar uma experiência na Expo Revestir 2027, em São Paulo.</p>
+  <a class="passport-primary-cta" href="https://www.ruffinoacabamentos.com/passaporte-revestir">Clique aqui para fazer seu cadastro <span aria-hidden="true">↗</span></a>
+  <p class="campaign-date">Inscrições de 01/10 a 13/11/2026, às 23h59.</p>
+ </div>
+ <figure class="passport-hero-photo home-photo"><img src="/assets/img/finalista-ambiente-01-v2.jpg" alt="Ilustração de sala com piso amadeirado, sofá claro e detalhes em vinho"><figcaption>Imagem ilustrativa. Não representa projeto inscrito.</figcaption></figure>
 </section>
-
-<section id="votacao" class="passport-vote-section" aria-labelledby="finalistas-title">
-    <div class="passport-section-heading">
-        <div><span class="passport-eyebrow dark">Votação popular</span><h2 id="finalistas-title">Qual projeto merece o seu voto?</h2></div>
-        <p>A ordem dos finalistas muda a cada visita à página para garantir uma escolha justa. Analise os projetos e vote no seu preferido.</p>
-    </div>
-
-    <?php if (count($finalists) !== 3): ?>
-        <div class="notice warning">A curadoria dos três finalistas está sendo concluída. A votação ficará disponível assim que a seleção for publicada.</div>
-    <?php endif; ?>
-
-    <div class="candidate-grid" data-finalist-grid>
-        <?php foreach ($finalists as $index => $finalist): ?>
-            <?php $image = !empty($finalist['fallback_image_url']) ? (string) $finalist['fallback_image_url'] : $defaultImages[$index % 3]; ?>
-            <article class="candidate-card" data-finalist-id="<?= (int) $finalist['id'] ?>">
-                <button class="candidate-select" type="button" data-vote-choice="<?= (int) $finalist['id'] ?>" data-vote-label="<?= $h($finalist['project_title']) ?>" data-vote-social="<?= $h($finalist['instagram_url']) ?>" aria-pressed="false" <?= $votingOpen ? '' : 'disabled' ?>>
-                    <div class="candidate-image"><img src="<?= $h($image) ?>" alt="Projeto <?= $h($finalist['project_title']) ?>" loading="lazy"><span>0<?= $index + 1 ?></span></div>
-                    <div class="candidate-meta"><div><small>PROJETO</small><h3><?= $h($finalist['project_title']) ?></h3><p><?= $h($finalist['participant_name']) ?></p></div><span class="candidate-radio" aria-hidden="true">✓</span></div>
-                </button>
-            </article>
-        <?php endforeach; ?>
-    </div>
-    <div class="passport-vote-action">
-        <p><span aria-hidden="true">◇</span> Um voto por pessoa. Seus dados são usados apenas para validar a participação.</p>
-        <button class="passport-vote-button" type="button" data-submit-vote disabled>Confirmar meu voto</button>
-    </div>
-    <p class="vote-period-status"><?= $votingOpen ? 'Votação aberta até 11/12/2026, às 23h59 (horário de Brasília).' : 'Votação disponível de 25/11/2026 a 11/12/2026.' ?></p>
+<section id="como-participar" class="passport-vote-section">
+ <div class="passport-section-heading"><div><span class="passport-eyebrow dark">Em <span class="tag-keyword">3 passos</span></span><h2>Do seu ambiente à Expo Revestir.</h2></div><p>Uma campanha para profissionais de arquitetura, design de interiores e decoração residentes no Brasil.</p></div>
+ <div class="campaign-steps">
+  <article><span class="step-number">01</span><h3>Cadastre seu projeto</h3><p>No site da Ruffino, preencha o formulário e envie <strong>no mínimo 3 fotos reais</strong> do ambiente concluído, com o piso em destaque. Informe a revenda e o vendedor para que eles também possam ser premiados.</p><small>01 de outubro a 13 de novembro de 2026</small></article>
+  <article><span class="step-number">02</span><h3>É a vez da curadoria</h3><p>A comissão técnica avalia estética, criatividade, aplicação do piso, execução e coerência com o espaço. <strong>Ao menos 3 projetos</strong> serão selecionados para a final.</p><small>Após o encerramento das inscrições</small></article>
+  <article><span class="step-number">03</span><h3>O público escolhe</h3><p>Os finalistas participam da votação popular, com <strong>voto único individual</strong>. O projeto com mais votos vence a Experiência Ruffino na Expo Revestir 2027.</p><small>Votação: 25/11 a 11/12/2026<br>Resultado: até 14/12/2026</small></article>
+ </div>
 </section>
-
-<?php if ($rankingEnabled): ?>
-<section id="resultado" class="passport-results-section" aria-labelledby="ranking-title">
-    <div><span class="passport-eyebrow">Acompanhe</span><h2 id="ranking-title">Como está a votação</h2><p>O resultado parcial é atualizado em tempo real. Para preservar a disputa, divulgamos somente os percentuais.</p></div>
-    <div class="passport-result-list">
-        <?php foreach ($ranking as $row): ?>
-            <div class="passport-result-row"><div><strong>Projeto <?= $h($row['project_title']) ?></strong><span><?= number_format((float) $row['percentage'], 1, ',', '.') ?>%</span></div><div class="passport-track"><i style="width:<?= (float) $row['percentage'] ?>%"></i></div></div>
-        <?php endforeach; ?>
-    </div>
+<section class="campaign-eligibility">
+ <div><span class="passport-eyebrow dark">Seu <span class="tag-keyword">projeto</span></span><h2>Antes de se cadastrar</h2></div>
+ <ul><li>Ambiente concluído entre <strong>01/01 e 13/11/2026</strong>.</li><li>Piso vinílico exclusivamente Ruffino, sem vinílico de marca concorrente no ambiente inscrito.</li><li>Fotos reais: não são aceitos renders, maquetes eletrônicas ou imagens geradas por IA.</li><li>Você deve ser autor ou coautor e ter autorização para usar as imagens.</li></ul>
 </section>
-<?php endif; ?>
-
-<dialog class="vote-dialog passport-vote-dialog" data-vote-dialog aria-labelledby="vote-dialog-title">
-    <form method="dialog" class="dialog-close-row"><button value="cancel" aria-label="Fechar">×</button></form>
-    <div class="dialog-step" data-vote-confirm-step>
-        <span class="passport-eyebrow dark">Confirme com atenção</span>
-        <h2 id="vote-dialog-title">Seu voto vai para <span data-selected-project></span></h2>
-        <p>Depois da confirmação, o voto não poderá ser alterado.</p>
-        <div class="captcha-box"><label for="vote-captcha"><span data-captcha-question>Carregando verificação…</span></label><input id="vote-captcha" type="number" inputmode="numeric" autocomplete="off" required></div>
-        <div class="honeypot" aria-hidden="true"><label>Website<input data-honeypot tabindex="-1" autocomplete="off"></label></div>
-        <p class="form-feedback" role="status" data-vote-feedback></p>
-        <div class="dialog-actions"><button type="button" class="button secondary" data-change-choice>Trocar escolha</button><button type="button" class="button primary" data-confirm-vote>Confirmar voto</button></div>
-    </div>
-    <div class="dialog-step passport-thanks" data-vote-success hidden>
-        <img src="/assets/img/logo-ruffino.svg" alt="">
-        <span class="passport-eyebrow dark">Voto confirmado</span>
-        <h2>Obrigado por fazer parte desta viagem.</h2>
-        <p data-success-message></p>
-        <div class="receipt"><span>Seu comprovante</span><strong data-receipt-code></strong></div>
-        <a class="passport-primary-cta" data-social-link href="#" target="_blank" rel="noopener">Curtir a publicação ↗</a>
-    </div>
-</dialog>
+<section class="passport-results-section campaign-prize">
+ <div><span class="passport-eyebrow"><span class="tag-keyword">Experiência</span> Ruffino</span><h2>Seu próximo destino: Revestir 2027.</h2><p>O autor do projeto vencedor embarca para São Paulo como convidado VIP da Ruffino.</p></div>
+ <div><ul class="prize-list"><li>Passagem aérea de ida e volta, com origem no Brasil</li><li>1 diária de hotel, conforme disponibilidade</li><li>Traslado entre aeroporto, hotel e evento</li><li>R$ 1.000 em voucher de alimentação</li><li>Participação como convidado VIP da Ruffino</li></ul><p>Prêmio pessoal e intransferível. Consulte as condições completas no regulamento.</p></div>
+</section>
+<section class="passport-vote-section campaign-retail"><span class="passport-eyebrow dark">Parceiros que <span class="tag-keyword">ganham juntos</span></span><h2>A revenda e o vendedor também participam.</h2><p>Quando indicados no cadastro do projeto vencedor, a revenda recebe <strong>R$ 5.000 em produtos Ruffino</strong> e o vendedor recebe <strong>R$ 1.000 em cartão premiação</strong>, conforme as condições do regulamento de varejo.</p><div class="campaign-links"><a href="/regulamento/profissionais">Regulamento dos profissionais ↗</a><a href="/regulamento/revendas">Regulamento das revendas e vendedores ↗</a></div><a class="passport-primary-cta" href="https://www.ruffinoacabamentos.com/passaporte-revestir">Fazer meu cadastro no site da Ruffino ↗</a></section>

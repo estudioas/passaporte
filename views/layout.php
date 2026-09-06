@@ -1,6 +1,8 @@
 <?php
 
 use App\Core\Config;
+use App\Core\Settings;
+use App\Core\Auth;
 use App\Core\Csrf;
 use App\Core\Security;
 
@@ -22,7 +24,7 @@ $baseUrl = rtrim((string) Config::get('app.base_url', ''), '/');
     <meta property="og:image" content="<?= $h($baseUrl . '/assets/img/og-passaporte-ruffino.svg') ?>">
     <title><?= $h($title ?? 'Passaporte Ruffino Revestir 2027') ?> · Passaporte Ruffino</title>
     <link rel="icon" href="/assets/img/logo_pr_b.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/assets/css/app.css?v=2.0.0">
+    <link rel="stylesheet" href="/assets/css/app.css?v=3.0.0">
 </head>
 <body class="campaign-v2">
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -32,11 +34,13 @@ $baseUrl = rtrim((string) Config::get('app.base_url', ''), '/');
     </a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menu</button>
     <nav id="main-nav" class="main-nav" aria-label="Navegação principal">
-        <a href="/#votacao">Votação</a>
-        <a href="/#resultado">Resultado</a>
+        <?php if (Settings::bool('page_home_enabled', true)): ?><a href="/#como-participar">Como participar</a><?php endif; ?>
+        <?php if (Settings::bool('page_voting_enabled', false)): ?><a href="/votacao">Votação</a><?php endif; ?>
+        <?php if (Settings::bool('page_jurors_enabled', false)): ?><a href="/jurados">Jurados</a><?php endif; ?>
         <a href="/regulamento/profissionais">Regulamentos</a>
     </nav>
 </header>
+<?php if (Auth::user()): ?><aside class="admin-preview-bar">Prévia administrativa · <a href="/">Home</a> · <a href="/votacao">Votação</a> · <a href="/jurados">Jurados</a> · <a href="/admin/configuracoes">Ativar/desativar páginas</a></aside><?php endif; ?>
 <main id="conteudo"><?= $content ?></main>
 <footer class="site-footer">
     <div>
