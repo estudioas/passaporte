@@ -73,7 +73,7 @@ final class AdminController
             'accesses_24h' => (int) $pdo->query('SELECT COUNT(*) FROM audit_events WHERE event_type = "http.request" AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)')->fetchColumn(),
             'review_queue' => (int) $pdo->query('SELECT COUNT(*) FROM votes WHERE status = "review"')->fetchColumn(),
             'high_risk_24h' => (int) $pdo->query('SELECT COUNT(*) FROM audit_events WHERE risk_score >= 60 AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)')->fetchColumn(),
-            'registrations' => (int) $pdo->query('SELECT COUNT(*) FROM registrations')->fetchColumn(),
+
         ];
         $analyticsReady = Auth::can('analytics', $user) && Analytics::ready();
         $online = $analyticsReady ? Analytics::online() : null;
@@ -269,7 +269,7 @@ final class AdminController
                 'page_jurors_enabled' => Settings::bool('page_jurors_enabled', false),
                 'public_ranking_enabled' => Settings::bool('public_ranking_enabled', false),
                 'voting_manual_closed' => Settings::bool('voting_manual_closed', false),
-                'registration_manual_closed' => Settings::bool('registration_manual_closed', false),
+
             ],
             'message' => $_SESSION['admin_message'] ?? null,
         ], 'admin/layout');
@@ -282,10 +282,10 @@ final class AdminController
         if (!Csrf::verify($_POST['_csrf'] ?? null)) {
             Response::redirect('/admin/configuracoes');
         }
-        foreach (['public_ranking_enabled', 'voting_manual_closed', 'registration_manual_closed', 'page_home_enabled', 'page_voting_enabled', 'page_jurors_enabled'] as $key) {
+        foreach (['public_ranking_enabled', 'voting_manual_closed', 'page_home_enabled', 'page_voting_enabled', 'page_jurors_enabled'] as $key) {
             Settings::set($key, !empty($_POST[$key]) ? '1' : '0');
         }
-        Audit::log('admin.settings_updated', ['keys' => ['public_ranking_enabled', 'voting_manual_closed', 'registration_manual_closed', 'page_home_enabled', 'page_voting_enabled', 'page_jurors_enabled']], 'admin', (int) $user['id']);
+        Audit::log('admin.settings_updated', ['keys' => ['public_ranking_enabled', 'voting_manual_closed', 'page_home_enabled', 'page_voting_enabled', 'page_jurors_enabled']], 'admin', (int) $user['id']);
         $_SESSION['admin_message'] = 'Configurações atualizadas.';
         Response::redirect('/admin/configuracoes');
     }

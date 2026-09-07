@@ -27,6 +27,6 @@
 <?php foreach ($report['breakdowns'][$key] as $row): ?><tr><td><?= $h($row['label']) ?></td><td><?= $n($row['views']) ?></td><td><?= $n($row['visitors']) ?></td></tr><?php endforeach; ?>
 <?php if (!$report['breakdowns'][$key]): ?><tr><td colspan="3">Sem dados neste período.</td></tr><?php endif; ?>
 </tbody></table></div></article><?php endforeach; ?>
-<article class="admin-panel"><h2>Ações registradas</h2><p>Totais de ações no período, sem atribuição à origem do tráfego.</p><ul><?php foreach ($report['conversions'] as $row): ?><li><?= $row['label'] === 'vote.confirmed' ? 'Votos confirmados (todos os status)' : 'Inscrições recebidas neste site' ?>: <strong><?= $n($row['total']) ?></strong></li><?php endforeach; ?></ul><p>O cadastro externo no site da Ruffino não está incluído nestas métricas.</p></article>
+<article class="admin-panel"><h2>Ações registradas</h2><p>Totais de ações no período, sem atribuição à origem do tráfego.</p><ul><?php foreach ($report['conversions'] as $row): ?><li>Votos confirmados (todos os status): <strong><?= $n($row['total']) ?></strong></li><?php endforeach; ?></ul><p>O cadastro externo no site da Ruffino não está incluído nestas métricas.</p></article>
 </section>
 <?php endif; ?>
