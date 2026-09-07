@@ -1,5 +1,13 @@
 (() => {
   'use strict';
+  const privacyNotice = document.querySelector('[data-lgpd-notice]');
+  try {
+    if (sessionStorage.getItem('ruffino-privacy-dismissed') === '1' && privacyNotice) privacyNotice.hidden = true;
+  } catch (_) { /* O botão funciona mesmo com armazenamento indisponível. */ }
+  document.querySelector('[data-lgpd-close]')?.addEventListener('click', () => {
+    if (privacyNotice) privacyNotice.hidden = true;
+    try { sessionStorage.setItem('ruffino-privacy-dismissed', '1'); } catch (_) {}
+  });
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
   const navToggle = document.querySelector('.nav-toggle');
