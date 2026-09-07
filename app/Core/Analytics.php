@@ -144,7 +144,7 @@ final class Analytics
         foreach (['pages' => 'path', 'countries' => 'country_code', 'cities' => "CONCAT(COALESCE(NULLIF(city, ''), 'Não informada'), ' · ', COALESCE(NULLIF(region, ''), '—'), ' · ', country_code)", 'sources' => 'source', 'campaigns' => "CONCAT(COALESCE(NULLIF(campaign, ''), 'Sem campanha UTM'), ' · ', source, ' · ', COALESCE(NULLIF(medium, ''), '—'))", 'devices' => 'device_type', 'browsers' => 'browser'] as $key => $column) {
             $breakdowns[$key] = $query('SELECT ' . $column . ' AS label, COUNT(*) AS views, COUNT(DISTINCT device_hash) AS visitors' . $where . 'GROUP BY label ORDER BY views DESC, label ASC LIMIT 20');
         }
-        $conversions = $query('SELECT event_type AS label, COUNT(*) AS total FROM audit_events WHERE created_at >= ? AND created_at < ? AND event_type IN ("vote.confirmed", "registration.received") GROUP BY event_type');
+        $conversions = $query('SELECT event_type AS label, COUNT(*) AS total FROM audit_events WHERE created_at >= ? AND created_at < ? AND event_type = "vote.confirmed" GROUP BY event_type');
         return compact('totals', 'sessions', 'daily', 'breakdowns', 'conversions') + ['online' => self::online(), 'started' => Settings::get('analytics_started_at', ''), 'unknown_city' => (int) $query('SELECT COUNT(*) AS n' . $where . "AND city = ''")[0]['n']];
     }
 

@@ -39,7 +39,7 @@ final class Auth
 
     public static function permissions(): array
     {
-        return ['analytics' => 'Consultar analytics e pessoas online', 'audit' => 'Consultar logs e auditoria', 'view_ips' => 'Visualizar IPs completos', 'review_votes' => 'Revisar e alterar status dos votos', 'export_audit' => 'Exportar logs CSV', 'finalists' => 'Gerenciar finalistas', 'registrations' => 'Consultar inscrições e baixar arquivos', 'settings' => 'Ativar páginas e configurar a campanha'];
+        return ['analytics' => 'Consultar analytics e pessoas online', 'audit' => 'Consultar logs e auditoria', 'view_ips' => 'Visualizar IPs completos', 'review_votes' => 'Revisar e alterar status dos votos', 'export_audit' => 'Exportar logs CSV', 'finalists' => 'Gerenciar finalistas', 'settings' => 'Ativar páginas e configurar a campanha'];
     }
 
     public static function rolePermissions(): array

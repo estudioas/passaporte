@@ -40,13 +40,12 @@ $routes = [
         '/' => [$public, 'home'],
         '/votacao' => [$public, 'voting'],
         '/jurados' => [$public, 'jurors'],
-        '/inscricoes' => [$public, 'registration'],
+        '/inscricoes' => static fn () => \App\Core\Response::redirect('https://www.ruffinoacabamentos.com/passaporte-revestir'),
         '/regulamento/profissionais' => static fn () => $public->regulations('profissionais'),
         '/regulamento/revendas' => static fn () => $public->regulations('varejo'),
         '/privacidade' => [$public, 'privacy'],
         '/auditoria' => [$public, 'auditPage'],
         '/api/captcha/vote' => static fn () => $public->captcha('vote'),
-        '/api/captcha/inscricao' => static fn () => $public->captcha('registration'),
         '/admin/login' => [$admin, 'login'],
         '/admin/analytics' => [$admin, 'analytics'],
         '/admin/analytics/exportar' => [$admin, 'exportAnalytics'],
@@ -56,7 +55,6 @@ $routes = [
         '/admin/auditoria' => [$admin, 'audit'],
         '/admin/auditoria/exportar' => [$admin, 'exportAudit'],
         '/admin/configuracoes' => [$admin, 'settings'],
-        '/admin/inscricoes' => [$admin, 'registrations'],
         '/admin/permissoes' => [$admin, 'permissions'],
         '/admin/usuarios' => [$admin, 'users'],
     ],
@@ -64,7 +62,6 @@ $routes = [
         '/api/analytics/presence' => [Analytics::class, 'heartbeat'],
         '/acesso' => [$public, 'authenticateSite'],
         '/api/vote' => [$public, 'vote'],
-        '/inscricoes' => [$public, 'submitRegistration'],
         '/admin/login' => [$admin, 'authenticate'],
         '/admin/logout' => [$admin, 'logout'],
         '/admin/finalistas/salvar' => [$admin, 'saveFinalist'],
@@ -76,12 +73,6 @@ $routes = [
     ],
 ];
 
-if ($method === 'GET' && preg_match('#^/admin/inscricoes/(\d+)/arquivos$#', $path, $matches)) {
-    $admin->registrationFiles((int) $matches[1]);
-}
-if ($method === 'GET' && preg_match('#^/admin/arquivos/(\d+)/download$#', $path, $matches)) {
-    $admin->downloadRegistrationFile((int) $matches[1]);
-}
 
 $handler = $routes[$method][$path] ?? null;
 if (is_callable($handler)) {

@@ -11,7 +11,7 @@ $h = [Security::class, 'h'];
 <aside class="admin-sidebar">
     <a href="/admin" class="admin-brand"><img src="/assets/img/logo_pr_w.svg" alt="Passaporte Ruffino"><span>Painel de controle</span></a>
     <nav><a href="/admin">Visão geral</a>
-    <?php foreach (['analytics' => ['/admin/analytics', 'Analytics'], 'finalists' => ['/admin/finalistas', 'Finalistas'], 'audit' => ['/admin/auditoria', 'Auditoria'], 'registrations' => ['/admin/inscricoes', 'Inscrições'], 'settings' => ['/admin/configuracoes', 'Configurações']] as $permission => [$url, $label]): if (Auth::can($permission, $user)): ?><a href="<?= $h($url) ?>"><?= $h($label) ?></a><?php endif; endforeach; ?>
+    <?php foreach (['analytics' => ['/admin/analytics', 'Analytics'], 'finalists' => ['/admin/finalistas', 'Finalistas'], 'audit' => ['/admin/auditoria', 'Auditoria'], 'settings' => ['/admin/configuracoes', 'Configurações']] as $permission => [$url, $label]): if (Auth::can($permission, $user)): ?><a href="<?= $h($url) ?>"><?= $h($label) ?></a><?php endif; endforeach; ?>
     <?php if (($user['role'] ?? '') === 'administrator'): ?><a href="/admin/usuarios">Usuários</a><a href="/admin/permissoes">Permissões por nível</a><?php endif; ?>
     <a href="/" target="_blank">Ver site ↗</a></nav>
     <form action="/admin/logout" method="post"><input type="hidden" name="_csrf" value="<?= $h(Csrf::token()) ?>"><button>Sair</button></form>
