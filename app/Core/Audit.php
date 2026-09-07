@@ -16,6 +16,10 @@ final class Audit
         int $riskScore = 0,
         ?PDO $connection = null
     ): int {
+        $geo = Geo::location();
+        $metadata['network_encrypted'] = Privacy::encrypt(['ip' => Security::clientIp()]);
+        $metadata['geo_city'] = $geo['city'];
+        $metadata['geo_region'] = $geo['region'];
         $write = static function (PDO $pdo) use ($eventType, $metadata, $actorType, $actorId, $riskScore): int {
             $lock = $pdo->query('SELECT last_hash FROM audit_chain_state WHERE id = 1 FOR UPDATE');
             $previousHash = (string) ($lock->fetchColumn() ?: str_repeat('0', 64));
@@ -61,9 +65,11 @@ final class Audit
 
     public static function verifyChain(): array
     {
-        $rows = Database::connection()->query('SELECT * FROM audit_events ORDER BY id ASC')->fetchAll();
+        $rows = Database::connection()->query('SELECT * FROM audit_events ORDER BY id ASC');
+        $count = 0;
         $previous = str_repeat('0', 64);
-        foreach ($rows as $row) {
+        while ($row = $rows->fetch()) {
+            $count++;
             if (!hash_equals($previous, (string) $row['previous_hash'])) {
                 return ['valid' => false, 'event_id' => (int) $row['id'], 'reason' => 'previous_hash'];
             }
@@ -77,6 +83,6 @@ final class Audit
             }
             $previous = (string) $row['entry_hash'];
         }
-        return ['valid' => true, 'events' => count($rows), 'last_hash' => $previous];
+        return ['valid' => true, 'events' => $count, 'last_hash' => $previous];
     }
 }

@@ -9,11 +9,12 @@
     <h2>2. Dados de inscrição</h2>
     <p>Nome, registro profissional, Instagram, cidade/UF, e-mail, WhatsApp, empresa, revenda, vendedor, dados do ambiente, autoria fotográfica, nota fiscal e imagens enviadas. Os campos pessoais ficam criptografados no banco e os arquivos permanecem fora da pasta pública.</p>
     <h2>3. Dados de acesso e votação</h2>
-    <p>Data e hora, rota acessada, país informado pela camada de proteção, método da requisição, navegador em formato de hash, identificador pseudônimo do dispositivo, hash do IP, sinais de risco e resultado do CAPTCHA. O sistema não armazena IP bruto.</p>
+    <p>Data e hora, rota acessada, país, cidade e região aproximados informados pela hospedagem ou camada de proteção, método da requisição, navegador em formato de hash, identificador pseudônimo do dispositivo, hash do IP, sinais de risco e resultado do CAPTCHA. Novos registros incluem o IP completo criptografado, acessível somente à equipe autenticada para auditoria e segurança. Os registros anteriores mantêm apenas hashes. Também registramos páginas visitadas, domínio de referência (sem o endereço completo), parâmetros de campanha UTM, categoria do dispositivo, navegador e sinais periódicos de presença enquanto a página está visível, para estatísticas de audiência. A identificação de visitantes e pessoas online é estimada por navegador.</p>
     <h2>4. Bases legais e compartilhamento</h2>
     <p>O tratamento usa execução do regulamento, consentimento quando aplicável, legítimo interesse em segurança e prevenção à fraude e cumprimento de obrigações legais. Dados são acessíveis apenas à equipe autorizada e a fornecedores essenciais de hospedagem e proteção, sob dever de confidencialidade.</p>
     <h2>5. Retenção</h2>
     <ul>
+        <li>Estatísticas de audiência detalhadas: até 180 dias.</li>
         <li>Logs de acesso, votos, recibos e trilha de auditoria: 24 meses após o resultado, salvo disputa ou obrigação legal.</li>
         <li>Inscrições não finalistas: até 12 meses após o encerramento.</li>
         <li>Dados de vencedores e documentos necessários à premiação: conforme prazos legais, fiscais e de defesa de direitos.</li>

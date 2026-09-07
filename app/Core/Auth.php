@@ -37,6 +37,34 @@ final class Auth
         return $user;
     }
 
+    public static function permissions(): array
+    {
+        return ['analytics' => 'Consultar analytics e pessoas online', 'audit' => 'Consultar logs e auditoria', 'view_ips' => 'Visualizar IPs completos', 'review_votes' => 'Revisar e alterar status dos votos', 'export_audit' => 'Exportar logs CSV', 'finalists' => 'Gerenciar finalistas', 'registrations' => 'Consultar inscrições e baixar arquivos', 'settings' => 'Ativar páginas e configurar a campanha'];
+    }
+
+    public static function rolePermissions(): array
+    {
+        $saved = Settings::get('role_permissions_auditor');
+        if ($saved === null) { return ['analytics', 'audit', 'review_votes', 'export_audit']; }
+        $decoded = json_decode((string) $saved, true);
+        return is_array($decoded) ? array_values(array_intersect(array_keys(self::permissions()), array_filter($decoded, 'is_string'))) : [];
+    }
+
+    public static function can(string $permission, ?array $user = null): bool
+    {
+        $user = $user ?? self::user();
+        if (!$user || !array_key_exists($permission, self::permissions())) { return false; }
+        if (($user['role'] ?? '') === 'administrator') { return true; }
+        return ($user['role'] ?? '') === 'auditor' && in_array($permission, self::rolePermissions(), true);
+    }
+
+    public static function requirePermission(string $permission): array
+    {
+        $user = self::requireUser();
+        if (!self::can($permission, $user)) { http_response_code(403); exit('Seu nível de usuário não permite esta ação.'); }
+        return $user;
+    }
+
     public static function attempt(string $email, string $password): bool
     {
         $pdo = Database::connection();

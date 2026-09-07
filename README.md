@@ -55,4 +55,4 @@ No painel, abra Configurações para ativar/desativar Home, Votação e Jurados.
 
 O regulamento oficial anexado chama a campanha de **Revestir 2027**, embora inscrições e votação ocorram em 2026. O site segue essa nomenclatura e o calendário: inscrições de 01/10/2026 a 13/11/2026, votação de 25/11/2026 a 11/12/2026 e resultado até 14/12/2026.
 
-O regulamento de varejo contém o campo jurídico pendente `[cidade-sede da Ruffino]`. O site sinaliza essa pendência; confirme o foro antes da publicação.
+O foro do regulamento de varejo foi atualizado para Curitiba/PR conforme orientação da organização em 07/09/2026.

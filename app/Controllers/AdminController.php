@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Audit;
+use App\Core\Analytics;
 use App\Core\Auth;
 use App\Core\Captcha;
 use App\Core\Csrf;
@@ -52,6 +53,11 @@ final class AdminController
     public function dashboard(): void
     {
         $user = Auth::requireUser();
+        if (!Auth::can('audit', $user)) {
+            if (Auth::can('analytics', $user)) { Response::redirect('/admin/analytics'); }
+            View::render('admin/welcome', ['title' => 'Painel', 'user' => $user], 'admin/layout');
+            return;
+        }
         $pdo = Database::connection();
         $ranking = $pdo->query(
             'SELECT f.id, f.participant_name, f.project_title, COUNT(v.id) AS vote_count '
@@ -69,13 +75,15 @@ final class AdminController
             'high_risk_24h' => (int) $pdo->query('SELECT COUNT(*) FROM audit_events WHERE risk_score >= 60 AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)')->fetchColumn(),
             'registrations' => (int) $pdo->query('SELECT COUNT(*) FROM registrations')->fetchColumn(),
         ];
+        $analyticsReady = Auth::can('analytics', $user) && Analytics::ready();
+        $online = $analyticsReady ? Analytics::online() : null;
         $recent = $pdo->query('SELECT id, event_type, actor_type, country_code, risk_score, request_path, created_at FROM audit_events ORDER BY id DESC LIMIT 20')->fetchAll();
-        View::render('admin/dashboard', compact('user', 'ranking', 'metrics', 'recent') + ['title' => 'Visão geral'], 'admin/layout');
+        View::render('admin/dashboard', compact('user', 'ranking', 'metrics', 'recent', 'online') + ['title' => 'Visão geral'], 'admin/layout');
     }
 
     public function finalists(): void
     {
-        $user = Auth::requireAdministrator();
+        $user = Auth::requirePermission('finalists');
         $rows = Database::connection()->query('SELECT * FROM finalists ORDER BY active DESC, sort_order ASC, id ASC')->fetchAll();
         View::render('admin/finalists', ['title' => 'Finalistas', 'user' => $user, 'finalists' => $rows, 'message' => $_SESSION['admin_message'] ?? null, 'error' => $_SESSION['admin_error'] ?? null], 'admin/layout');
         unset($_SESSION['admin_message'], $_SESSION['admin_error']);
@@ -83,7 +91,7 @@ final class AdminController
 
     public function saveFinalist(): never
     {
-        $user = Auth::requireAdministrator();
+        $user = Auth::requirePermission('finalists');
         if (!Csrf::verify($_POST['_csrf'] ?? null)) {
             $_SESSION['admin_error'] = 'Sessão expirada.';
             Response::redirect('/admin/finalistas');
@@ -124,7 +132,7 @@ final class AdminController
 
     public function disableFinalist(): never
     {
-        $user = Auth::requireAdministrator();
+        $user = Auth::requirePermission('finalists');
         if (!Csrf::verify($_POST['_csrf'] ?? null)) {
             Response::redirect('/admin/finalistas');
         }
@@ -135,35 +143,86 @@ final class AdminController
         Response::redirect('/admin/finalistas');
     }
 
+    public function analytics(): void
+    {
+        $user = Auth::requirePermission('analytics');
+        $range = Analytics::range($_GET);
+        $ready = Analytics::ready();
+        $report = $ready ? Analytics::report($range) : [];
+        View::render('admin/analytics', compact('user', 'range', 'ready', 'report') + ['title' => 'Analytics'], 'admin/layout');
+    }
+
+    public function exportAnalytics(): never
+    {
+        $user = Auth::requirePermission('analytics');
+        if (!Analytics::ready()) { http_response_code(503); exit('Analytics indisponível.'); }
+        $range = Analytics::range($_GET);
+        $report = Analytics::report($range);
+        Audit::log('admin.analytics_exported', $range, 'admin', (int) $user['id']);
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="analytics-' . $range['start'] . '-' . $range['end'] . '.csv"');
+        $out = fopen('php://output', 'wb'); fwrite($out, "\xEF\xBB\xBF");
+        fputcsv($out, ['dimensao', 'descricao', 'visualizacoes', 'visitantes'], ';');
+        foreach ($report['breakdowns'] as $dimension => $rows) {
+            foreach ($rows as $row) {
+                $label = (string) $row['label'];
+                if (preg_match('/^[\s]*[=+@-]/', $label)) { $label = "'" . $label; }
+                fputcsv($out, [$dimension, $label, $row['views'], $row['visitors']], ';');
+            }
+        }
+        foreach ($report['daily'] as $row) { fputcsv($out, ['dia', $row['day'], $row['views'], $row['visitors']], ';'); }
+        fclose($out); exit;
+    }
+
+    public function online(): never
+    {
+        Auth::requirePermission('analytics');
+        header('Cache-Control: no-store');
+        if (!Analytics::ready()) { Response::json(['ok' => false], 503); }
+        Response::json(['ok' => true, 'online' => Analytics::online(), 'updated_at' => date('H:i:s')]);
+    }
+
+    private static function pagination(int $total, string $key, int $size = 50): array
+    {
+        $pages = max(1, (int) ceil($total / $size));
+        $page = max(1, min($pages, (int) ($_GET[$key] ?? 1)));
+        return ['total' => $total, 'pages' => $pages, 'page' => $page, 'size' => $size, 'offset' => ($page - 1) * $size, 'key' => $key];
+    }
+
     public function audit(): void
     {
-        $user = Auth::requireUser();
+        $user = Auth::requirePermission('audit');
         $pdo = Database::connection();
         $status = in_array($_GET['status'] ?? '', ['valid', 'review', 'invalid'], true) ? (string) $_GET['status'] : '';
         $risk = max(0, min(100, (int) ($_GET['risk'] ?? 0)));
-        $where = [];
-        $params = [];
-        if ($status !== '') {
-            $where[] = 'v.status = ?';
-            $params[] = $status;
-        }
-        if ($risk > 0) {
-            $where[] = 'v.risk_score >= ?';
-            $params[] = $risk;
-        }
-        $sql = 'SELECT v.id, v.receipt_code, v.status, v.risk_score, v.risk_signals_json, v.country_code, v.device_hash, v.ip_hash, v.confirmed_at, f.participant_name, f.project_title '
-            . 'FROM votes v JOIN finalists f ON f.id = v.finalist_id '
-            . ($where ? 'WHERE ' . implode(' AND ', $where) : '') . ' ORDER BY v.id DESC LIMIT 250';
-        $stmt = $pdo->prepare($sql);
+        $where = []; $params = [];
+        if ($status !== '') { $where[] = 'v.status = ?'; $params[] = $status; }
+        if ($risk > 0) { $where[] = 'v.risk_score >= ?'; $params[] = $risk; }
+        $clause = $where ? ' WHERE ' . implode(' AND ', $where) : '';
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM votes v' . $clause); $stmt->execute($params);
+        $votePager = self::pagination((int) $stmt->fetchColumn(), 'votes_page');
+        $stmt = $pdo->prepare('SELECT v.*, f.participant_name, f.project_title, a.metadata_json FROM votes v JOIN finalists f ON f.id = v.finalist_id LEFT JOIN audit_events a ON a.id = v.audit_event_id' . $clause . ' ORDER BY v.id DESC LIMIT 50 OFFSET ' . $votePager['offset']);
         $stmt->execute($params);
-        $votes = $stmt->fetchAll();
-        $events = $pdo->query('SELECT id, event_type, actor_type, actor_id, country_code, risk_score, request_method, request_path, metadata_json, entry_hash, created_at FROM audit_events ORDER BY id DESC LIMIT 250')->fetchAll();
-        View::render('admin/audit', ['title' => 'Auditoria', 'user' => $user, 'votes' => $votes, 'events' => $events, 'chain' => Audit::verifyChain(), 'filters' => compact('status', 'risk')], 'admin/layout');
+        $votes = array_map(static fn ($row) => Analytics::eventDetails($row, Auth::can('view_ips', $user)), $stmt->fetchAll());
+        $eventType = is_string($_GET['event'] ?? null) ? mb_substr(trim($_GET['event']), 0, 100) : '';
+        $ip = is_string($_GET['ip'] ?? null) ? trim($_GET['ip']) : '';
+        $range = Analytics::range($_GET);
+        $where = ['created_at >= ?', 'created_at < ?']; $params = [$range['start'], $range['until']];
+        if ($eventType !== '') { $where[] = 'event_type = ?'; $params[] = $eventType; }
+        if ($ip !== '') { $where[] = 'ip_hash = ?'; $params[] = Security::secretHash($ip); }
+        $clause = ' WHERE ' . implode(' AND ', $where);
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM audit_events' . $clause); $stmt->execute($params);
+        $eventPager = self::pagination((int) $stmt->fetchColumn(), 'events_page');
+        $stmt = $pdo->prepare('SELECT id, event_type, actor_type, actor_id, country_code, risk_score, request_method, request_path, metadata_json, entry_hash, created_at FROM audit_events' . $clause . ' ORDER BY id DESC LIMIT 50 OFFSET ' . $eventPager['offset']);
+        $stmt->execute($params);
+        $events = array_map(static fn ($row) => Analytics::eventDetails($row, Auth::can('view_ips', $user)), $stmt->fetchAll());
+        $chain = ($_GET['verify'] ?? '') === '1' ? Audit::verifyChain() : null;
+        View::render('admin/audit', compact('user', 'votes', 'events', 'chain', 'votePager', 'eventPager', 'range', 'eventType', 'ip') + ['title' => 'Auditoria', 'filters' => compact('status', 'risk')], 'admin/layout');
     }
 
     public function updateVote(): never
     {
-        $user = Auth::requireUser();
+        $user = Auth::requirePermission('review_votes');
         if (!Csrf::verify($_POST['_csrf'] ?? null)) {
             Response::redirect('/admin/auditoria');
         }
@@ -181,16 +240,19 @@ final class AdminController
 
     public function exportAudit(): never
     {
-        $user = Auth::requireUser();
+        $user = Auth::requirePermission('export_audit');
         Audit::log('admin.audit_exported', [], 'admin', (int) $user['id']);
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="auditoria-passaporte-ruffino-' . date('Ymd-His') . '.csv"');
         $out = fopen('php://output', 'wb');
         fwrite($out, "\xEF\xBB\xBF");
-        fputcsv($out, ['id', 'evento', 'ator', 'pais', 'risco', 'metodo', 'rota', 'hash', 'data'], ';');
-        $stmt = Database::connection()->query('SELECT id, event_type, actor_type, country_code, risk_score, request_method, request_path, entry_hash, created_at FROM audit_events ORDER BY id ASC');
+        fputcsv($out, ['id', 'evento', 'ator', 'pais', 'risco', 'metodo', 'rota', 'hash', 'data', 'ip_completo', 'cidade', 'regiao'], ';');
+        $stmt = Database::connection()->query('SELECT id, event_type, actor_type, country_code, risk_score, request_method, request_path, entry_hash, created_at, metadata_json FROM audit_events ORDER BY id ASC');
         while ($row = $stmt->fetch()) {
-            fputcsv($out, array_values($row), ';');
+            $row = Analytics::eventDetails($row, Auth::can('view_ips', $user));
+            unset($row['metadata_json']);
+            $values = array_map(static fn ($v) => preg_match('/^[\s]*[=+@-]/', (string) $v) ? "'" . $v : $v, array_values($row));
+            fputcsv($out, $values, ';');
         }
         fclose($out);
         exit;
@@ -198,7 +260,7 @@ final class AdminController
 
     public function settings(): void
     {
-        $user = Auth::requireAdministrator();
+        $user = Auth::requirePermission('settings');
         View::render('admin/settings', [
             'title' => 'Configurações', 'user' => $user,
             'settings' => [
@@ -216,7 +278,7 @@ final class AdminController
 
     public function saveSettings(): never
     {
-        $user = Auth::requireAdministrator();
+        $user = Auth::requirePermission('settings');
         if (!Csrf::verify($_POST['_csrf'] ?? null)) {
             Response::redirect('/admin/configuracoes');
         }
@@ -230,13 +292,35 @@ final class AdminController
 
     public function registrations(): void
     {
-        $user = Auth::requireAdministrator();
+        $user = Auth::requirePermission('registrations');
         $rows = Database::connection()->query('SELECT id, reference_code, encrypted_payload, status, country_code, consented_at, created_at FROM registrations ORDER BY id DESC LIMIT 200')->fetchAll();
         foreach ($rows as &$row) {
             $row['data'] = Privacy::decrypt((string) $row['encrypted_payload']);
             unset($row['encrypted_payload']);
         }
         View::render('admin/registrations', ['title' => 'Inscrições', 'user' => $user, 'registrations' => $rows], 'admin/layout');
+    }
+
+    public function permissions(): void
+    {
+        $user = Auth::requireAdministrator();
+        View::render('admin/permissions', ['title' => 'Permissões por nível', 'user' => $user, 'permissions' => Auth::permissions(), 'allowed' => Auth::rolePermissions(), 'message' => $_SESSION['permissions_message'] ?? null], 'admin/layout');
+        unset($_SESSION['permissions_message']);
+    }
+
+    public function savePermissions(): never
+    {
+        $user = Auth::requireAdministrator();
+        if (!Csrf::verify(is_string($_POST['_csrf'] ?? null) ? $_POST['_csrf'] : null)) { http_response_code(403); exit('Sessão expirada.'); }
+        $submitted = is_array($_POST['permissions'] ?? null) ? $_POST['permissions'] : [];
+        $allowed = array_values(array_intersect(array_keys(Auth::permissions()), array_filter($submitted, 'is_string')));
+        if (array_intersect($allowed, ['review_votes', 'export_audit', 'view_ips'])) { $allowed[] = 'audit'; $allowed = array_values(array_unique($allowed)); }
+        Database::transaction(static function ($pdo) use ($allowed, $user): void {
+            Settings::set('role_permissions_auditor', (string) json_encode($allowed));
+            Audit::log('admin.permissions_updated', ['role' => 'auditor', 'permissions' => $allowed], 'admin', (int) $user['id'], 0, $pdo);
+        });
+        $_SESSION['permissions_message'] = 'Permissões do nível Auditor atualizadas. Administradores mantêm acesso completo.';
+        Response::redirect('/admin/permissoes');
     }
 
     public function users(): void
@@ -300,7 +384,7 @@ final class AdminController
 
     public function registrationFiles(int $registrationId): never
     {
-        Auth::requireAdministrator();
+        Auth::requirePermission('registrations');
         $stmt = Database::connection()->prepare('SELECT id, file_kind, original_name, mime_type, size_bytes FROM registration_files WHERE registration_id = ? ORDER BY id ASC');
         $stmt->execute([$registrationId]);
         Response::json(['ok' => true, 'files' => $stmt->fetchAll()]);
@@ -308,7 +392,7 @@ final class AdminController
 
     public function downloadRegistrationFile(int $fileId): never
     {
-        $user = Auth::requireAdministrator();
+        $user = Auth::requirePermission('registrations');
         $stmt = Database::connection()->prepare('SELECT rf.*, r.reference_code FROM registration_files rf JOIN registrations r ON r.id = rf.registration_id WHERE rf.id = ? LIMIT 1');
         $stmt->execute([$fileId]);
         $file = $stmt->fetch();

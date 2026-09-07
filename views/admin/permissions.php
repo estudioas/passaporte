@@ -1,0 +1,6 @@
+<?php use App\Core\Csrf; use App\Core\Security; $h = [Security::class, 'h']; ?>
+<?php if ($message): ?><div class="notice success"><?= $h($message) ?></div><?php endif; ?>
+<section class="admin-panel"><h2>O que cada nível pode acessar</h2><p>As permissões abaixo valem para todos os usuários do nível Auditor. Somente administradores podem acessar esta tela, alterar níveis ou gerenciar usuários. Administradores mantêm acesso completo.</p>
+<form action="/admin/permissoes" method="post"><input type="hidden" name="_csrf" value="<?= $h(Csrf::token()) ?>"><div class="table-wrap"><table><thead><tr><th>Recurso</th><th>Administrador</th><th>Auditor</th></tr></thead><tbody>
+<?php foreach ($permissions as $key => $label): ?><tr><td><?= $h($label) ?></td><td>Permitido</td><td><label><input type="checkbox" name="permissions[]" value="<?= $h($key) ?>" <?= in_array($key, $allowed, true) ? 'checked' : '' ?> aria-label="<?= $h('Permitir ao auditor: ' . $label) ?>"> Permitir</label></td></tr><?php endforeach; ?>
+<tr><td>Gerenciar usuários e permissões</td><td>Permitido</td><td>Exclusivo do administrador</td></tr></tbody></table></div><p>Para revisar votos, habilite também a consulta de auditoria. Para ver IPs completos em tela ou CSV, habilite explicitamente essa permissão.</p><button class="button primary">Salvar permissões</button></form></section>
