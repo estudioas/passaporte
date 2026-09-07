@@ -24,7 +24,7 @@ $baseUrl = rtrim((string) Config::get('app.base_url', ''), '/');
     <meta property="og:image" content="<?= $h($baseUrl . '/assets/img/og-passaporte-ruffino.svg') ?>">
     <title><?= $h($title ?? 'Passaporte Ruffino Revestir 2027') ?> · Passaporte Ruffino</title>
     <link rel="icon" href="/assets/img/logo-ruffino.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/assets/css/app.css?v=3.2.0">
+    <link rel="stylesheet" href="/assets/css/app.css?v=3.2.1">
 </head>
 <body class="campaign-v2">
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -38,7 +38,13 @@ $baseUrl = rtrim((string) Config::get('app.base_url', ''), '/');
         <?php if (Settings::bool('page_home_enabled', true)): ?><a href="/#como-participar">Como participar</a><?php endif; ?>
         <?php if (Settings::bool('page_voting_enabled', false)): ?><a href="/votacao">Votação</a><?php endif; ?>
         <?php if (Settings::bool('page_jurors_enabled', false)): ?><a href="/jurados">Jurados</a><?php endif; ?>
-        <a href="/regulamento/profissionais">Regulamentos</a>
+        <details class="regulations-menu">
+            <summary>Regulamento <span aria-hidden="true">⌄</span></summary>
+            <div class="regulations-submenu">
+                <a href="/regulamento/profissionais">Regulamento Arquiteto</a>
+                <a href="/regulamento/revendas">Regulamento Lojista</a>
+            </div>
+        </details>
     </nav>
 </header>
 
