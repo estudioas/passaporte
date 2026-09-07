@@ -17,6 +17,41 @@
     navToggle.setAttribute('aria-expanded', String(open));
   });
 
+  const analyticsView = document.body.dataset.analyticsView;
+  if (analyticsView) {
+    let pending = false;
+    const ping = async () => {
+      if (document.visibilityState !== 'visible' || pending) return;
+      pending = true;
+      try {
+        await fetch('/api/analytics/presence', {method: 'POST', credentials: 'same-origin', body: new URLSearchParams({_csrf: csrfToken, view: analyticsView})});
+      } catch (_) { /* A navegação não depende do analytics. */ }
+      finally { pending = false; }
+    };
+    ping();
+    setInterval(ping, 30000);
+    document.addEventListener('visibilitychange', ping);
+  }
+  if (document.querySelector('[data-online-count]')) {
+    let pending = false;
+    const refreshOnline = async () => {
+      if (document.visibilityState !== 'visible' || pending) return;
+      pending = true;
+      try {
+        const response = await fetch('/admin/analytics/online', {credentials: 'same-origin', cache: 'no-store'});
+        if (!response.ok) throw new Error('indisponível');
+        const data = await response.json();
+        if (!data.ok) throw new Error('indisponível');
+        document.querySelectorAll('[data-online-count]').forEach(el => { el.textContent = data.online; });
+        document.querySelectorAll('[data-online-status]').forEach(el => { el.textContent = 'Atualizado às ' + data.updated_at; });
+      } catch (_) {
+        document.querySelectorAll('[data-online-status]').forEach(el => { el.textContent = 'Sem atualização ao vivo; tentando novamente…'; });
+      } finally { pending = false; }
+    };
+    setInterval(refreshOnline, 30000);
+    document.addEventListener('visibilitychange', refreshOnline);
+  }
+
   const dialog = document.querySelector('[data-vote-dialog]');
   if (dialog) {
     let selectedId = null;

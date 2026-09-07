@@ -1,6 +1,8 @@
-<section class="hero hero-compact"><span class="passport-eyebrow dark">Regulamento <span class="tag-keyword">oficial</span></span><h1>Regulamento das revendas e vendedores</h1><p>Passaporte Ruffino Revestir 2027</p></section><article class="section legal-page numbered"><nav class="campaign-links"><a href="/regulamento/profissionais">Profissionais</a><a href="/regulamento/revendas">Revendas e vendedores</a></nav><p>CAMPANHA PASSAPORTE RUFFINO REVESTIR 2027</p>
-<h2>1. OBJETIVO A presente política visa incentivar as Revendas Parceiras da Ruffino Acabamentos e seus respectivos vendedores a engajarem profissionais parceiros (arquitetos e designers) na participação do concurso cultural &quot;Passaporte Ruffino Revestir 2027&quot;.</h2>
-<h2>2. QUEM PARTICIPA Todas as revendas ativas e cadastradas na base da Ruffino Acabamentos, que estejam em dia com suas obrigações financeiras e comerciais junto à empresa, bem como seus respectivos vendedores.</h2>
+<section class="hero hero-compact"><span class="passport-eyebrow dark"><span class="tag-keyword">Regulamento</span> oficial</span><h1>Regulamento das revendas e vendedores</h1><p>Passaporte Ruffino Revestir 2027</p></section><article class="section legal-page numbered"><nav class="campaign-links"><a href="/regulamento/profissionais">Profissionais</a><a href="/regulamento/revendas">Revendas e vendedores</a></nav><p>CAMPANHA PASSAPORTE RUFFINO REVESTIR 2027</p>
+<h2>1. OBJETIVO</h2>
+<p>A presente política visa incentivar as Revendas Parceiras da Ruffino Acabamentos e seus respectivos vendedores a engajarem profissionais parceiros (arquitetos e designers) na participação do concurso cultural &quot;Passaporte Ruffino Revestir 2027&quot;.</p>
+<h2>2. QUEM PARTICIPA</h2>
+<p>Todas as revendas ativas e cadastradas na base da Ruffino Acabamentos, que estejam em dia com suas obrigações financeiras e comerciais junto à empresa, bem como seus respectivos vendedores.</p>
 <h2>3. MECÂNICA DA PREMIAÇÃO - REVENDA</h2>
 <p>3.1. A Revenda será premiada caso o participante autor do projeto vencedor do concurso tenha a marcado como a fornecedora do piso vinílico utilizado no ambiente dentro formulário de inscrição preenchido pelo arquiteto/profissional. </p>
 <p>3.2. A Revenda indicada pelo arquiteto vencedor receberá R$ 5.000,00 (Cinco mil reais) em produtos Ruffino Acabamentos.</p>
@@ -18,4 +20,4 @@
 <p>5.3. A participação na campanha implica na aceitação total destas regras.</p>
 <p>5.4 A Ruffino Acabamentos pode alterar datas, etapas ou detalhes da campanha caso necessário, garantindo ampla comunicação prévia ao público.</p>
 <p>5.5. Os casos omissos serão avaliados pela organização, cuja decisão é final e irrevogável.</p>
-<p>5.6. Fica eleito o foro da Comarca de [cidade-sede da Ruffino], com exclusão de qualquer outro, por mais privilegiado que seja.</p></article>
+<p>5.6. Fica eleito o foro da Comarca de Curitiba/PR, com exclusão de qualquer outro, por mais privilegiado que seja.</p></article>

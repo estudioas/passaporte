@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Controllers\AdminController;
 use App\Controllers\PublicController;
 use App\Core\Audit;
+use App\Core\Analytics;
 use App\Core\Security;
 use App\Core\View;
 
@@ -19,6 +20,7 @@ $path = $path === '/' ? '/' : rtrim($path, '/');
 $public = new PublicController();
 $admin = new AdminController();
 
+if (!in_array($path, ['/api/analytics/presence', '/admin/analytics/online'], true)) {
 Audit::log(
     'http.request',
     [
@@ -29,6 +31,9 @@ Audit::log(
     !empty($_SESSION['admin_id']) ? (int) $_SESSION['admin_id'] : null,
     Security::isSuspiciousUserAgent() ? 35 : 0
 );
+
+}
+if (str_starts_with($path, '/admin') || $path === '/api/analytics/presence') { header('Cache-Control: no-store, private'); }
 
 $routes = [
     'GET' => [
@@ -43,15 +48,20 @@ $routes = [
         '/api/captcha/vote' => static fn () => $public->captcha('vote'),
         '/api/captcha/inscricao' => static fn () => $public->captcha('registration'),
         '/admin/login' => [$admin, 'login'],
+        '/admin/analytics' => [$admin, 'analytics'],
+        '/admin/analytics/exportar' => [$admin, 'exportAnalytics'],
+        '/admin/analytics/online' => [$admin, 'online'],
         '/admin' => [$admin, 'dashboard'],
         '/admin/finalistas' => [$admin, 'finalists'],
         '/admin/auditoria' => [$admin, 'audit'],
         '/admin/auditoria/exportar' => [$admin, 'exportAudit'],
         '/admin/configuracoes' => [$admin, 'settings'],
         '/admin/inscricoes' => [$admin, 'registrations'],
+        '/admin/permissoes' => [$admin, 'permissions'],
         '/admin/usuarios' => [$admin, 'users'],
     ],
     'POST' => [
+        '/api/analytics/presence' => [Analytics::class, 'heartbeat'],
         '/acesso' => [$public, 'authenticateSite'],
         '/api/vote' => [$public, 'vote'],
         '/inscricoes' => [$public, 'submitRegistration'],
@@ -61,6 +71,7 @@ $routes = [
         '/admin/finalistas/desativar' => [$admin, 'disableFinalist'],
         '/admin/auditoria/voto' => [$admin, 'updateVote'],
         '/admin/configuracoes' => [$admin, 'saveSettings'],
+        '/admin/permissoes' => [$admin, 'savePermissions'],
         '/admin/usuarios/salvar' => [$admin, 'saveUser'],
     ],
 ];
