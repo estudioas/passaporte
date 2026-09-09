@@ -18,7 +18,7 @@
  <figure class="campaign-editorial-image"><img src="/assets/img/home-jantar-2027-v2.jpg" alt="Sala de jantar com mesa de madeira, cadeiras em vinho e cinza e piso amadeirado" loading="lazy" width="1536" height="1024"><figcaption>Imagem ilustrativa. Não representa projeto inscrito.</figcaption></figure>
 </section>
 <section class="campaign-eligibility">
- <div><span class="passport-eyebrow dark">Seu <span class="tag-keyword">projeto</span></span><h2>Antes de se cadastrar</h2></div>
+ <div><span class="passport-eyebrow dark">Seu <span class="tag-keyword">projeto</span></span><h2>O que seu projeto precisa ter</h2></div>
  <ul><li>Ambiente concluído entre <strong>01/01 e 13/11/2026</strong>.</li><li>Piso vinílico exclusivamente Ruffino, sem vinílico de marca concorrente no ambiente inscrito.</li><li>Fotos reais: não são aceitos renders, maquetes eletrônicas ou imagens geradas por IA.</li><li>Você deve ser autor ou coautor e ter autorização para usar as imagens.</li></ul>
 </section>
 <section class="passport-results-section campaign-prize">
