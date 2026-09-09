@@ -24,7 +24,7 @@ $baseUrl = rtrim((string) Config::get('app.base_url', ''), '/');
     <meta property="og:image" content="<?= $h($baseUrl . '/assets/img/og-passaporte-ruffino.svg') ?>">
     <title><?= $h($title ?? 'Passaporte Ruffino Revestir 2027') ?> · Passaporte Ruffino</title>
     <link rel="icon" href="/assets/img/logo-ruffino.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/assets/css/app.css?v=3.3.1">
+    <link rel="stylesheet" href="/assets/css/app.css?v=3.3.2">
 </head>
 <body class="campaign-v2"<?php if (empty($_SESSION['admin_id']) && !empty($_SESSION['analytics_view'])): ?> data-analytics-view="<?= (int) $_SESSION['analytics_view'] ?>"<?php endif; ?>>
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -33,18 +33,11 @@ $baseUrl = rtrim((string) Config::get('app.base_url', ''), '/');
     <a class="brand" href="/" aria-label="Passaporte Ruffino — início">
         <img src="/assets/img/logo_pr_w.svg" alt="Passaporte Ruffino Expo Revestir 2027">
     </a>
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menu</button>
     <nav id="main-nav" class="main-nav" aria-label="Navegação principal">
         <?php if (Settings::bool('page_home_enabled', true)): ?><a href="/#como-participar">Como participar</a><?php endif; ?>
         <?php if (Settings::bool('page_voting_enabled', false)): ?><a href="/votacao">Votação</a><?php endif; ?>
         <?php if (Settings::bool('page_jurors_enabled', false)): ?><a href="/jurados">Jurados</a><?php endif; ?>
-        <details class="regulations-menu">
-            <summary>Regulamento <span aria-hidden="true">⌄</span></summary>
-            <div class="regulations-submenu">
-                <a href="/regulamento/profissionais">Regulamento Arquiteto</a>
-                <a href="/regulamento/revendas">Regulamento Lojista</a>
-            </div>
-        </details>
+        <a href="/regulamento/profissionais">Regulamento</a>
     </nav>
 </header>
 
