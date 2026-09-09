@@ -1,6 +1,6 @@
 <section class="hero hero-compact"><span class="passport-eyebrow dark"><span class="tag-keyword">Regulamento</span> oficial</span><h1>Regulamento dos profissionais</h1><p>Passaporte Ruffino Revestir 2027</p>
 </section>
-<article class="section legal-page legal-regulation"><nav class="campaign-links"><a href="/regulamento/profissionais">Profissionais</a><a href="/regulamento/revendas">Revendas e vendedores</a></nav>
+<article class="section legal-page legal-regulation">
 <p class="legal-document-name">REGULAMENTO OFICIAL - CAMPANHA PASSAPORTE RUFFINO REVESTIR 2027</p>
 <section class="legal-topic">
 <h2>1. DISPOSIÇÕES GERAIS</h2>

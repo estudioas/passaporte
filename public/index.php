@@ -42,7 +42,6 @@ $routes = [
         '/jurados' => [$public, 'jurors'],
         '/inscricoes' => static fn () => \App\Core\Response::redirect('https://www.ruffinoacabamentos.com/passaporte-revestir'),
         '/regulamento/profissionais' => static fn () => $public->regulations('profissionais'),
-        '/regulamento/revendas' => static fn () => $public->regulations('varejo'),
         '/privacidade' => [$public, 'privacy'],
         '/auditoria' => [$public, 'auditPage'],
         '/api/captcha/vote' => static fn () => $public->captcha('vote'),
