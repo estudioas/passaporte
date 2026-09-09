@@ -24,7 +24,7 @@ $baseUrl = rtrim((string) Config::get('app.base_url', ''), '/');
     <meta property="og:image" content="<?= $h($baseUrl . '/assets/img/og-passaporte-ruffino.svg') ?>">
     <title><?= $h($title ?? 'Passaporte Ruffino Revestir 2027') ?> · Passaporte Ruffino</title>
     <link rel="icon" href="/assets/img/logo-ruffino.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/assets/css/app.css?v=3.3.3">
+    <link rel="stylesheet" href="/assets/css/app.css?v=3.3.4">
 </head>
 <body class="campaign-v2"<?php if (empty($_SESSION['admin_id']) && !empty($_SESSION['analytics_view'])): ?> data-analytics-view="<?= (int) $_SESSION['analytics_view'] ?>"<?php endif; ?>>
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>

@@ -51,4 +51,7 @@
 .campaign-v2 .main-nav{display:flex;flex-wrap:wrap}@media(max-width:700px){.campaign-v2 .main-nav{width:100%;justify-content:flex-start;gap:12px 24px;padding:0 0 8px}.campaign-v2 .main-nav a{font-size:12px;letter-spacing:.04em;padding:8px 0}}
 
 /* Títulos da explicação acompanham o peso do título de abertura. */
-#como-participar .passport-section-heading h2,.campaign-eligibility h2{font-weight:900;text-transform:none;line-height:1.08}
+#como-participar .passport-section-heading h2{font-weight:900;text-transform:none;line-height:1.08}
+
+/* Cadastro e premiação compartilham a mesma tipografia. */
+.campaign-eligibility h2,.campaign-prize h2{font-size:clamp(36px,4vw,62px);font-weight:700;line-height:1.08;letter-spacing:-.045em;text-transform:none;margin:22px 0 0}
