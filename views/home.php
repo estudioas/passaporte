@@ -2,7 +2,7 @@
  <div class="passport-hero-copy">
   <span class="passport-eyebrow dark">#<span class="tag-keyword">Passaporte</span>Ruffino</span>
   <h1>Seu projeto pode levar você <em>mais longe.</em></h1>
-  <p>Transformou um ambiente com piso vinílico Ruffino? Seu projeto pode ganhar uma experiência na Expo Revestir 2027, em São Paulo.</p>
+  <p>Transformou um ambiente com piso NGC ou vinílico Ruffino? Seu projeto pode ganhar uma experiência na Expo Revestir 2027, em São Paulo.</p>
   <a class="passport-primary-cta" href="https://www.ruffinoacabamentos.com/passaporte-revestir">Clique aqui para fazer seu cadastro <span aria-hidden="true">↗</span></a>
   <p class="campaign-date">Inscrições de 01/10 a 13/11/2026, às 23h59.</p>
  </div>
@@ -18,8 +18,8 @@
  <figure class="campaign-editorial-image"><img src="/assets/img/home-jantar-2027-v2.jpg" alt="Sala de jantar com mesa de madeira, cadeiras em vinho e cinza e piso amadeirado" loading="lazy" width="1536" height="1024"><figcaption>Imagem ilustrativa. Não representa projeto inscrito.</figcaption></figure>
 </section>
 <section class="campaign-eligibility">
- <div><span class="passport-eyebrow dark">Seu <span class="tag-keyword">projeto</span></span><h2>O que o seu cadastro precisa ter</h2></div>
- <ul><li>Ambiente concluído entre <strong>01/01 e 13/11/2026</strong>.</li><li>Piso vinílico exclusivamente Ruffino, sem vinílico de marca concorrente no ambiente inscrito.</li><li>Fotos reais: não são aceitos renders, maquetes eletrônicas ou imagens geradas por IA.</li><li>Você deve ser autor ou coautor e ter autorização para usar as imagens.</li></ul>
+ <div><span class="passport-eyebrow dark">Seu <span class="tag-keyword">projeto</span></span><h2>O que o cadastro precisa ter</h2></div>
+ <ul><li>Ambiente concluído entre <strong>01/01 e 13/11/2026</strong>.</li><li>Piso NGC ou vinílico Ruffino, sem piso de marca concorrente no ambiente inscrito.</li><li>Fotos reais: não são aceitos renders, maquetes eletrônicas ou imagens geradas por IA.</li><li>Você deve ser autor ou coautor e ter autorização para usar as imagens.</li></ul>
 </section>
 <section class="passport-results-section campaign-prize">
  <div><span class="passport-eyebrow"><span class="tag-keyword">Experiência</span> Ruffino</span><h2>Seu próximo destino:<br><span>Expo Revestir 2027.</span></h2><p>O autor do projeto vencedor embarca para São Paulo como convidado VIP da Ruffino.</p></div>

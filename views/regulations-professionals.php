@@ -18,8 +18,8 @@
 <p class="legal-clause"><span class="clause-number">3.1.</span><span>Poderão ser inscritos projetos de ambientes concluídos entre <span class="legal-nowrap">01/01/2026</span> e <span class="legal-nowrap">13/11/2026</span>.</span></p>
 <p class="legal-clause"><span class="clause-number">3.2.</span><span>Para serem considerados válidos, os projetos devem atender às seguintes condições:</span></p>
 <ol class="legal-letter-list" type="a">
-  <li>Conter exclusivamente piso vinílico da marca Ruffino Acabamentos.</li>
-  <li>Não é permitido o uso de piso vinílico de marca concorrente no ambiente inscrito.</li>
+  <li>Conter exclusivamente piso NGC ou piso vinílico da marca Ruffino Acabamentos.</li>
+  <li>Não é permitido o uso de piso de marca concorrente no ambiente inscrito.</li>
   <li>É obrigatório o apontamento da revenda na qual o participante adquiriu os produtos da Ruffino Acabamentos utilizados no ambiente.</li>
   <li>Enviar no mínimo 03 (três) fotos do ambiente concluído, nas quais o piso da Ruffino esteja claramente visível e em destaque.</li>
   <li>O projeto deve ser real e finalizado, não sendo aceitos renders, maquetes eletrônicas, fotos geradas por IA ou imagens ilustrativas.</li>
