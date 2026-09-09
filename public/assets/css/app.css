@@ -49,3 +49,6 @@
 
 /* Links públicos sempre visíveis, inclusive no celular. */
 .campaign-v2 .main-nav{display:flex;flex-wrap:wrap}@media(max-width:700px){.campaign-v2 .main-nav{width:100%;justify-content:flex-start;gap:12px 24px;padding:0 0 8px}.campaign-v2 .main-nav a{font-size:12px;letter-spacing:.04em;padding:8px 0}}
+
+/* Títulos da explicação acompanham o peso do título de abertura. */
+#como-participar .passport-section-heading h2,.campaign-eligibility h2{font-weight:900;text-transform:none;line-height:1.08}
