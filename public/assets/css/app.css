@@ -55,3 +55,35 @@
 
 /* Cadastro e premiação compartilham a mesma tipografia. */
 .campaign-eligibility h2,.campaign-prize h2{font-size:clamp(36px,4vw,62px);font-weight:700;line-height:1.08;letter-spacing:-.045em;text-transform:none;margin:22px 0 0}
+
+/* Comissão julgadora: retratos e biografias da campanha 2027. */
+.jurors-intro{padding:72px clamp(24px,7vw,112px) 48px;background:#eee8e1}
+.jurors-intro h1{max-width:1000px;font-size:clamp(40px,5.4vw,76px);font-weight:800;line-height:1.06;letter-spacing:-.045em;margin:8px 0 32px;color:#302923}
+.jurors-intro h1 em{color:var(--wine);font-style:normal}
+.jurors-intro-copy{display:grid;grid-template-columns:1fr 1fr;gap:40px;max-width:1200px}
+.jurors-intro-copy p{font-size:16px;line-height:1.8;color:#51483f;margin:0}
+.jurors-index{display:flex;flex-wrap:wrap;gap:12px 32px;margin-top:36px;padding-top:24px;border-top:1px solid #cfc5bd}
+.jurors-index a{display:flex;align-items:center;gap:24px;min-height:44px;color:var(--wine);font-weight:650;text-decoration:none}
+.jurors-index a:hover{text-decoration:underline;text-underline-offset:5px}
+.jurors-profiles{padding:72px clamp(24px,7vw,112px) 96px;background:#faf8f4}
+.juror-profile{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1fr);align-items:center;gap:clamp(32px,6vw,96px);max-width:1240px;margin:0 auto;scroll-margin-top:32px}
+.juror-profile+.juror-profile{margin-top:72px;padding-top:72px;border-top:1px solid #d9d1c4}
+.juror-photo{margin:0;overflow:hidden;border-radius:6px}
+.juror-photo img{width:100%;height:auto;aspect-ratio:4/5;object-fit:cover}
+.juror-bio{min-width:0}
+.juror-area{display:block;font-size:12px;line-height:1.5;letter-spacing:.12em;text-transform:uppercase;color:var(--wine);font-weight:700}
+.juror-bio h2{font-size:clamp(38px,4vw,60px);line-height:1.08;letter-spacing:-.04em;margin:16px 0 24px;font-weight:800}
+.juror-bio h2 span{font-weight:400}
+.juror-bio p{font-size:16px;line-height:1.8;color:#51483f;margin:0 0 16px}
+.juror-instagram{display:inline-flex;align-items:center;gap:36px;padding:14px 20px;margin-top:12px;border:1px solid var(--wine);border-radius:4px;color:var(--wine);font-size:16px;font-weight:700;text-decoration:none}
+.juror-instagram small{display:block;font-size:11px;font-weight:500;margin-bottom:3px}
+.juror-instagram>span:last-child{font-size:26px;font-weight:400}
+.juror-instagram:hover{background:var(--wine);color:#fff}
+.juror-instagram:focus-visible,.jurors-index a:focus-visible,.jurors-cta a:focus-visible{outline:3px solid #ce8a55;outline-offset:5px}
+.jurors-cta{display:flex;align-items:center;justify-content:space-between;gap:40px;padding:72px clamp(24px,7vw,112px);background:var(--wine);color:#fff}
+.jurors-cta h2{font-size:clamp(32px,3.5vw,50px);line-height:1.1;letter-spacing:-.04em;max-width:600px;margin:0 0 20px}
+.jurors-cta p{margin-bottom:0}.jurors-cta-links{display:flex;flex-direction:column;align-items:flex-start;gap:20px;flex-shrink:0}
+.jurors-cta .passport-primary-cta{background:#fff8ef;color:var(--wine);margin:0}
+.campaign-jurors-link{display:inline-flex;align-items:center;gap:12px;min-height:44px;margin-top:16px;color:var(--wine);font-weight:700;text-underline-offset:4px}
+@media(max-width:800px){.jurors-intro{padding-top:48px}.jurors-intro-copy{grid-template-columns:1fr;gap:16px}.juror-profile{grid-template-columns:1fr;gap:28px;max-width:560px}.juror-profile+.juror-profile{margin-top:48px;padding-top:48px}.jurors-profiles{padding-top:40px;padding-bottom:56px}.juror-bio h2{margin-top:12px}.jurors-cta{flex-direction:column;align-items:flex-start;padding-top:48px;padding-bottom:48px}.jurors-cta-links{flex-shrink:1}.jurors-index{gap:8px 24px}.jurors-index a{font-size:14px;gap:12px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}

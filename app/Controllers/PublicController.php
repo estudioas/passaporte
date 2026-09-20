@@ -45,7 +45,10 @@ final class PublicController
     public function jurors(): void
     {
         if (!$this->pageAvailable('jurors')) return;
-        View::render('jurors', ['title' => 'Comissão julgadora']);
+        View::render('jurors', [
+            'title' => 'Jurados · André Henning, Bárbara Avila e Gerson Lima',
+            'description' => 'Conheça André Henning, Bárbara Avila e Gerson Lima, os jurados responsáveis pela seleção dos finalistas do Passaporte Ruffino Expo Revestir 2027.',
+        ]);
     }
 
     public function voting(): void

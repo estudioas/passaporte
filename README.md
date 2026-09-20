@@ -5,7 +5,8 @@ Subsite completo para `passaporte.enquetedigital.com`, construído para hospedag
 ## O que está incluído
 
 - home pública com a campanha em três passos e cadastro no site da Ruffino;
-- votação em /votacao e comissão em /jurados, inicialmente inativas;
+- votação em /votacao e comissão em /jurados, com publicação controlada pelo painel;
+- perfis de André Henning, Bárbara Avila e Gerson Lima, em ordem alfabética, com fotos e links para o Instagram;
 - controles de publicação em /admin/configuracoes;
 - finalistas em ordem aleatória a cada carregamento;
 - seleção livre e confirmação definitiva do voto;
