@@ -24,7 +24,7 @@
         </div>
     </article>
     <article class="juror-profile" id="barbara-avila" aria-labelledby="barbara-name">
-        <figure class="juror-photo"><img src="/assets/img/jurados/barbara-avila.jpg" alt="Retrato de Bárbara Avila" width="960" height="1200" loading="lazy" decoding="async"></figure>
+        <figure class="juror-photo"><img src="/assets/img/jurados/barbara-avila.jpg?v=2" alt="Retrato de Bárbara Avila" width="960" height="1200" loading="lazy" decoding="async"></figure>
         <div class="juror-bio">
             <span class="juror-area">Arquitetura e design</span>
             <h2 id="barbara-name">Bárbara <span>Avila</span></h2>
@@ -35,7 +35,7 @@
         </div>
     </article>
     <article class="juror-profile" id="gerson-lima" aria-labelledby="gerson-name">
-        <figure class="juror-photo"><img src="/assets/img/jurados/gerson-lima.jpg" alt="Retrato de Gerson Lima" width="960" height="1200" loading="lazy" decoding="async"></figure>
+        <figure class="juror-photo"><img src="/assets/img/jurados/gerson-lima.jpg?v=2" alt="Retrato de Gerson Lima" width="960" height="1200" loading="lazy" decoding="async"></figure>
         <div class="juror-bio">
             <span class="juror-area">Fotografia e olhar editorial</span>
             <h2 id="gerson-name">Gerson <span>Lima</span></h2>
