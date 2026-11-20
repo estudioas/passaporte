@@ -98,7 +98,8 @@ final class AdminController
             $row['images'] = $byFinalist[(int) $row['id']] ?? [];
         }
         unset($row);
-        View::render('admin/finalists', ['title' => 'Finalistas', 'user' => $user, 'finalists' => $rows, 'maxImages' => max(1, (int) Config::get('security.max_finalist_images', 10)), 'message' => $_SESSION['admin_message'] ?? null, 'error' => $_SESSION['admin_error'] ?? null], 'admin/layout');
+        $maxSourceImageBytes = max(1048576, (int) Config::get('security.max_finalist_source_image_bytes', 33554432));
+        View::render('admin/finalists', ['title' => 'Finalistas', 'user' => $user, 'finalists' => $rows, 'maxImages' => max(1, (int) Config::get('security.max_finalist_images', 10)), 'maxSourceImageBytes' => $maxSourceImageBytes, 'maxSourceImageMb' => (int) ceil($maxSourceImageBytes / 1048576), 'message' => $_SESSION['admin_message'] ?? null, 'error' => $_SESSION['admin_error'] ?? null], 'admin/layout');
         unset($_SESSION['admin_message'], $_SESSION['admin_error']);
     }
 
@@ -189,14 +190,16 @@ final class AdminController
         }
 
         $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-        $maxBytes = max(1048576, (int) Config::get('security.max_finalist_image_bytes', 8388608));
+        $maxBytes = max(1048576, (int) Config::get('security.max_finalist_source_image_bytes', 33554432));
+        $maxMegabytes = (int) ceil($maxBytes / 1048576);
         $validated = [];
+        $optimizedPaths = [];
         try {
             foreach ($files as $file) {
                 $uploadError = (int) $file['error'];
                 if ($uploadError !== UPLOAD_ERR_OK) {
                     $message = match ($uploadError) {
-                        UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Uma das fotos ultrapassa o limite de 8 MB.',
+                        UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Uma das fotos ultrapassa o limite de ' . $maxMegabytes . ' MB.',
                         UPLOAD_ERR_PARTIAL => 'Uma das fotos foi enviada apenas parcialmente. Tente novamente.',
                         UPLOAD_ERR_NO_TMP_DIR, UPLOAD_ERR_CANT_WRITE => 'O servidor não conseguiu armazenar as fotos temporariamente. Tente novamente em instantes.',
                         default => 'Uma das fotos não foi recebida corretamente.',
@@ -207,7 +210,7 @@ final class AdminController
                     throw new RuntimeException('Uma das fotos não foi recebida corretamente.');
                 }
                 if ((int) $file['size'] < 1 || (int) $file['size'] > $maxBytes) {
-                    throw new RuntimeException('Cada foto deve ter no máximo ' . number_format($maxBytes / 1048576, 0, ',', '.') . ' MB.');
+                    throw new RuntimeException('Cada foto original deve ter no máximo ' . $maxMegabytes . ' MB.');
                 }
                 $mime = (new \finfo(FILEINFO_MIME_TYPE))->file((string) $file['tmp_name']);
                 $dimensions = @getimagesize((string) $file['tmp_name']);
@@ -219,24 +222,39 @@ final class AdminController
                 if ($width < 600 || $height < 600 || $width > 10000 || $height > 10000) {
                     throw new RuntimeException('Cada foto deve ter entre 600 e 10.000 pixels em cada dimensão.');
                 }
+                $prepared = $this->optimizeFinalistImage((string) $file['tmp_name'], $mime, $width, $height, (int) $file['size']);
+                if ($prepared['is_optimized']) {
+                    $optimizedPaths[] = $prepared['tmp_name'];
+                }
                 $validated[] = [
-                    'tmp_name' => (string) $file['tmp_name'],
+                    'tmp_name' => $prepared['tmp_name'],
                     'original_name' => mb_substr(basename((string) $file['name']), 0, 255),
-                    'mime' => $mime,
-                    'extension' => $allowed[$mime],
-                    'size' => (int) $file['size'],
-                    'width' => $width,
-                    'height' => $height,
-                    'sha256' => hash_file('sha256', (string) $file['tmp_name']),
+                    'mime' => $prepared['mime'],
+                    'extension' => $prepared['extension'] ?? $allowed[$mime],
+                    'size' => $prepared['size'],
+                    'width' => $prepared['width'],
+                    'height' => $prepared['height'],
+                    'sha256' => $prepared['sha256'],
+                    'is_optimized' => $prepared['is_optimized'],
                 ];
             }
         } catch (RuntimeException $e) {
+            foreach ($optimizedPaths as $optimizedPath) {
+                if (is_file($optimizedPath)) {
+                    @unlink($optimizedPath);
+                }
+            }
             $_SESSION['admin_error'] = $e->getMessage();
             Response::redirect('/admin/finalistas#finalista-' . $finalistId);
         }
 
         $folder = dirname(__DIR__, 2) . '/storage/finalists/' . $finalistId;
         if (!is_dir($folder) && !mkdir($folder, 0700, true) && !is_dir($folder)) {
+            foreach ($optimizedPaths as $optimizedPath) {
+                if (is_file($optimizedPath)) {
+                    @unlink($optimizedPath);
+                }
+            }
             $_SESSION['admin_error'] = 'Não foi possível preparar o armazenamento das fotos.';
             Response::redirect('/admin/finalistas#finalista-' . $finalistId);
         }
@@ -257,7 +275,17 @@ final class AdminController
                 foreach ($validated as $index => $file) {
                     $storedName = bin2hex(random_bytes(16)) . '.' . $file['extension'];
                     $target = $folder . '/' . $storedName;
-                    if (!move_uploaded_file($file['tmp_name'], $target)) {
+                    $stored = false;
+                    if ($file['is_optimized']) {
+                        $stored = @rename($file['tmp_name'], $target);
+                        if (!$stored && @copy($file['tmp_name'], $target)) {
+                            @unlink($file['tmp_name']);
+                            $stored = true;
+                        }
+                    } else {
+                        $stored = move_uploaded_file($file['tmp_name'], $target);
+                    }
+                    if (!$stored) {
                         throw new RuntimeException('Não foi possível armazenar uma das fotos.');
                     }
                     chmod($target, 0600);
@@ -287,12 +315,115 @@ final class AdminController
                     unlink($storedPath);
                 }
             }
+            foreach ($optimizedPaths as $optimizedPath) {
+                if (is_file($optimizedPath)) {
+                    @unlink($optimizedPath);
+                }
+            }
             error_log((string) $e);
             $_SESSION['admin_error'] = $e instanceof RuntimeException ? $e->getMessage() : 'Não foi possível salvar as fotos.';
             Response::redirect('/admin/finalistas#finalista-' . $finalistId);
         }
         $_SESSION['admin_message'] = count($validated) === 1 ? 'Foto adicionada ao carrossel.' : count($validated) . ' fotos adicionadas ao carrossel.';
         Response::redirect('/admin/finalistas#finalista-' . $finalistId);
+    }
+
+    private function optimizeFinalistImage(string $path, string $mime, int $width, int $height, int $size): array
+    {
+        $original = [
+            'tmp_name' => $path,
+            'mime' => $mime,
+            'extension' => ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'][$mime] ?? 'jpg',
+            'size' => $size,
+            'width' => $width,
+            'height' => $height,
+            'sha256' => hash_file('sha256', $path),
+            'is_optimized' => false,
+        ];
+        $maxDimension = 2560;
+        if (($size <= 4194304 && max($width, $height) <= $maxDimension) || !function_exists('imagecreatetruecolor')) {
+            return $original;
+        }
+
+        $source = match ($mime) {
+            'image/jpeg' => function_exists('imagecreatefromjpeg') ? @imagecreatefromjpeg($path) : false,
+            'image/png' => function_exists('imagecreatefrompng') ? @imagecreatefrompng($path) : false,
+            'image/webp' => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($path) : false,
+            default => false,
+        };
+        if ($source === false) {
+            return $original;
+        }
+
+        if ($mime === 'image/jpeg' && function_exists('exif_read_data') && function_exists('imagerotate')) {
+            $exif = @exif_read_data($path, 'IFD0');
+            $orientation = is_array($exif) ? (int) ($exif['Orientation'] ?? 1) : 1;
+            $rotation = match ($orientation) { 3 => 180, 6 => -90, 8 => 90, default => 0 };
+            if ($rotation !== 0) {
+                $rotated = @imagerotate($source, $rotation, 0);
+                if ($rotated !== false) {
+                    imagedestroy($source);
+                    $source = $rotated;
+                }
+            }
+        }
+
+        $sourceWidth = imagesx($source);
+        $sourceHeight = imagesy($source);
+        $scale = min(1, $maxDimension / max($sourceWidth, $sourceHeight));
+        $targetWidth = max(1, (int) round($sourceWidth * $scale));
+        $targetHeight = max(1, (int) round($sourceHeight * $scale));
+        $targetMime = function_exists('imagewebp') ? 'image/webp' : 'image/jpeg';
+        $targetExtension = $targetMime === 'image/webp' ? 'webp' : 'jpg';
+        $canvas = imagecreatetruecolor($targetWidth, $targetHeight);
+        if ($canvas === false) {
+            imagedestroy($source);
+            return $original;
+        }
+        if ($targetMime === 'image/webp') {
+            imagealphablending($canvas, false);
+            imagesavealpha($canvas, true);
+            $transparent = imagecolorallocatealpha($canvas, 0, 0, 0, 127);
+            imagefill($canvas, 0, 0, $transparent);
+        } else {
+            $white = imagecolorallocate($canvas, 255, 255, 255);
+            imagefill($canvas, 0, 0, $white);
+        }
+        imagecopyresampled($canvas, $source, 0, 0, 0, 0, $targetWidth, $targetHeight, $sourceWidth, $sourceHeight);
+        imagedestroy($source);
+
+        $optimizedPath = tempnam(sys_get_temp_dir(), 'ruffino-finalist-');
+        if ($optimizedPath === false) {
+            imagedestroy($canvas);
+            return $original;
+        }
+        $encoded = false;
+        foreach ([84, 78, 72] as $quality) {
+            $encoded = $targetMime === 'image/webp'
+                ? @imagewebp($canvas, $optimizedPath, $quality)
+                : @imagejpeg($canvas, $optimizedPath, $quality);
+            if (!$encoded || (filesize($optimizedPath) ?: PHP_INT_MAX) <= 4194304) {
+                break;
+            }
+        }
+        imagedestroy($canvas);
+        clearstatcache(true, $optimizedPath);
+        $optimizedSize = $encoded ? (int) (filesize($optimizedPath) ?: 0) : 0;
+        if (!$encoded || $optimizedSize < 1) {
+            @unlink($optimizedPath);
+            return $original;
+        }
+
+        return [
+            'tmp_name' => $optimizedPath,
+            'mime' => $targetMime,
+            'extension' => $targetExtension,
+            'size' => $optimizedSize,
+            'width' => $targetWidth,
+            'height' => $targetHeight,
+            'sha256' => hash_file('sha256', $optimizedPath),
+            'is_optimized' => true,
+        ];
     }
 
     public function setFinalistImageCover(): never

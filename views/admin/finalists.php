@@ -35,12 +35,12 @@
 
                 <section class="finalist-gallery-admin" aria-labelledby="galeria-<?= (int)$row['id'] ?>">
                     <div class="gallery-admin-heading"><div><span>Carrossel</span><h3 id="galeria-<?= (int)$row['id'] ?>">Fotos do projeto</h3></div><small><?= count($row['images']) ?>/<?= (int)$maxImages ?> imagens</small></div>
-                    <form action="/admin/finalistas/imagens/enviar" method="post" enctype="multipart/form-data" class="gallery-upload-form">
+                    <form action="/admin/finalistas/imagens/enviar" method="post" enctype="multipart/form-data" class="gallery-upload-form" data-max-file-bytes="<?= (int)$maxSourceImageBytes ?>">
                         <input type="hidden" name="_csrf" value="<?= $h(Csrf::token()) ?>">
                         <input type="hidden" name="finalist_id" value="<?= (int)$row['id'] ?>">
                         <label>Adicionar fotos JPG, PNG ou WebP
                             <input type="file" name="images[]" accept="image/jpeg,image/png,image/webp" multiple required>
-                            <span>Até <?= (int)$maxImages ?> fotos por projeto, 8 MB por arquivo e mínimo de 600 × 600 px. Para arquivos grandes, envie em lotes menores.</span>
+                            <span>Até <?= (int)$maxImages ?> fotos por projeto, <?= (int)$maxSourceImageMb ?> MB por arquivo e mínimo de 600 × 600 px. Fotos grandes são otimizadas automaticamente; envie em lotes menores.</span>
                         </label>
                         <button class="button secondary small" <?= count($row['images']) >= (int)$maxImages ? 'disabled' : '' ?>>Enviar para o carrossel</button>
                     </form>

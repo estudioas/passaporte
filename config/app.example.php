@@ -37,7 +37,7 @@ return [
         'retention_access_days' => 180,
         'retention_vote_days' => 730,
         'max_upload_bytes' => 8388608,
-        'max_finalist_image_bytes' => 8388608,
+        'max_finalist_source_image_bytes' => 33554432,
         'max_finalist_images' => 10,
     ],
 ];

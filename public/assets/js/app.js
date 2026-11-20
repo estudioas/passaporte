@@ -135,10 +135,12 @@
     form.addEventListener('submit', (event) => {
       const input = form.querySelector('input[type="file"]');
       const files = [...(input?.files || [])];
-      const oversized = files.find((file) => file.size > 8 * 1024 * 1024);
+      const maxFileBytes = Number(form.dataset.maxFileBytes) || 32 * 1024 * 1024;
+      const maxFileMb = Math.ceil(maxFileBytes / 1024 / 1024);
+      const oversized = files.find((file) => file.size > maxFileBytes);
       if (oversized) {
         event.preventDefault();
-        window.alert(`A foto “${oversized.name}” ultrapassa o limite de 8 MB.`);
+        window.alert(`A foto “${oversized.name}” ultrapassa o limite de ${maxFileMb} MB.`);
         return;
       }
       const total = files.reduce((sum, file) => sum + file.size, 0);
