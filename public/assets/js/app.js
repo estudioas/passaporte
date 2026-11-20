@@ -60,6 +60,7 @@
     const feedback = dialog.querySelector('[data-vote-feedback]');
     const confirmButton = dialog.querySelector('[data-confirm-vote]');
     const captchaInput = dialog.querySelector('#vote-captcha');
+    const termsInput = dialog.querySelector('[data-vote-terms]');
 
     const loadCaptcha = async () => {
       feedback.textContent = '';
@@ -95,6 +96,7 @@
       dialog.querySelector('[data-selected-project]').textContent = chosen?.dataset.voteLabel || '';
       dialog.querySelector('[data-vote-confirm-step]').hidden = false;
       dialog.querySelector('[data-vote-success]').hidden = true;
+      if (termsInput) termsInput.checked = false;
       dialog.showModal();
       await loadCaptcha();
       captchaInput.focus();
@@ -102,8 +104,10 @@
 
     dialog.querySelector('[data-change-choice]')?.addEventListener('click', () => dialog.close());
     confirmButton?.addEventListener('click', async () => {
-      if (!selectedId || !captchaId || captchaInput.value.trim() === '') {
-        feedback.textContent = 'Responda à verificação para confirmar.';
+      if (!selectedId || !captchaId || captchaInput.value.trim() === '' || !termsInput?.checked) {
+        feedback.textContent = !termsInput?.checked
+          ? 'Aceite o regulamento e o aviso de privacidade para confirmar.'
+          : 'Responda à verificação para confirmar.';
         return;
       }
       const body = new FormData();
@@ -111,6 +115,8 @@
       body.append('finalist_id', selectedId);
       body.append('captcha_id', captchaId);
       body.append('captcha_answer', captchaInput.value);
+      body.append('terms_accepted', '1');
+      body.append('terms_version', '2026-11-20');
       body.append('website', dialog.querySelector('[data-honeypot]')?.value || '');
       confirmButton.disabled = true;
       confirmButton.textContent = 'Confirmando…';

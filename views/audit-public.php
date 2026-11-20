@@ -24,7 +24,7 @@
         </div>
     <?php endif; ?>
     <div class="trust-grid audit-grid">
-        <article><span>01</span><h2>Identidade pseudônima</h2><p>Endereço de rede e dispositivo são transformados em hashes irreversíveis; o painel não precisa guardar IP bruto.</p></article>
+        <article><span>01</span><h2>Identidade protegida</h2><p>Dispositivo, navegador e endereço de rede geram identificadores pseudônimos. O IP completo também fica criptografado, com acesso restrito à equipe autorizada para auditoria e segurança.</p></article>
         <article><span>02</span><h2>Cadeia de eventos</h2><p>Cada registro inclui o hash do evento anterior. Alterações retroativas quebram a verificação de integridade.</p></article>
         <article><span>03</span><h2>Revisão humana</h2><p>Sinais de automação, velocidade anormal e repetição são separados para análise antes de compor o ranking.</p></article>
     </div>

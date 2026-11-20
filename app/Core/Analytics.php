@@ -155,6 +155,8 @@ final class Analytics
         $row['ip_address'] = $showIp ? ($private['ip'] ?? 'Não registrado (histórico)') : 'Acesso restrito';
         $row['city'] = $metadata['geo_city'] ?? '';
         $row['region'] = $metadata['geo_region'] ?? '';
+        $row['terms_accepted'] = ($metadata['terms_accepted'] ?? false) === true;
+        $row['terms_version'] = (string) ($metadata['terms_version'] ?? '');
         unset($metadata['network_encrypted']);
         $row['metadata_json'] = json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}';
         return $row;

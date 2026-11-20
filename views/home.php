@@ -1,27 +1,41 @@
-<section class="passport-hero campaign-home">
+<section class="passport-hero campaign-home campaign-next-phase">
  <div class="passport-hero-copy">
   <span class="passport-eyebrow dark">#<span class="tag-keyword">Passaporte</span>Ruffino</span>
-  <h1>Seu projeto pode levar você <em>mais longe.</em></h1>
-  <p>Transformou um ambiente com piso NGC ou vinílico Ruffino? Seu projeto pode ganhar uma experiência na Expo Revestir 2027, em São Paulo.</p>
-  <a class="passport-primary-cta" href="https://www.ruffinoacabamentos.com/passaporte-revestir">Clique aqui para fazer seu cadastro <span aria-hidden="true">↗</span></a>
-  <p class="campaign-date">Inscrições de 01/10 a 13/11/2026, às 23h59.</p>
+  <p class="campaign-phase-label">Inscrições encerradas</p>
+  <h1>Os projetos estão prontos para ganhar <em>o seu voto.</em></h1>
+  <p>A etapa de inscrições foi concluída. Agora, três projetos finalistas seguem para a votação popular da campanha Passaporte Ruffino.</p>
+  <?php if ($votingOpen): ?>
+   <a class="passport-primary-cta" href="/votacao">Vote no seu projeto preferido <span aria-hidden="true">→</span></a>
+  <?php elseif ($votingPublished): ?>
+   <a class="passport-primary-cta" href="/votacao">Conheça os projetos finalistas <span aria-hidden="true">→</span></a>
+  <?php else: ?>
+   <span class="campaign-coming-soon">Votação a partir de 25/11/2026</span>
+  <?php endif; ?>
+  <p class="campaign-date">Votação de 25/11 a 11/12/2026, para participantes no Brasil.</p>
  </div>
  <figure class="passport-hero-photo home-photo"><img src="/assets/img/home-sala-2027-v2.jpg" alt="Sala com sofá vinho, painel ripado e piso amadeirado" width="1280" height="1600" fetchpriority="high"><figcaption>Imagem ilustrativa. Não representa projeto inscrito.</figcaption></figure>
 </section>
-<section id="como-participar" class="passport-vote-section">
- <div class="passport-section-heading"><div><span class="passport-eyebrow dark">Em <span class="tag-keyword">3 passos</span></span><h2>Do seu ambiente à Expo Revestir.</h2></div><p>Uma campanha para profissionais de arquitetura, design de interiores e decoração residentes no Brasil.</p></div>
- <div class="campaign-steps">
-  <article><span class="step-number">01</span><h3>Cadastre seu projeto</h3><p>No site da Ruffino, preencha o formulário e envie <strong>no mínimo 3 fotos reais</strong> do ambiente concluído, com o piso em destaque. Informe a revenda e o vendedor para que eles também possam ser premiados.</p><small>01 de outubro a 13 de novembro de 2026</small></article>
-  <article><span class="step-number">02</span><h3>É a vez da curadoria</h3><p>A comissão técnica avalia estética, criatividade, aplicação do piso, execução e coerência com o espaço. <strong>Ao menos 3 projetos</strong> serão selecionados para a final.</p><small>Após o encerramento das inscrições</small><?php if (\App\Core\Settings::bool('page_jurors_enabled', false)): ?><a class="campaign-jurors-link" href="/jurados">Conheça os jurados <span aria-hidden="true">↗</span></a><?php endif; ?></article>
-  <article><span class="step-number">03</span><h3>O público escolhe</h3><p>Os finalistas participam da votação popular, com <strong>voto único individual</strong>. O projeto com mais votos vence a Experiência Ruffino na Expo Revestir 2027.</p><small>Votação: 25/11 a 11/12/2026<br>Resultado: até 14/12/2026</small></article>
+
+<section id="proximos-passos" class="passport-vote-section campaign-next-steps">
+ <div class="passport-section-heading"><div><span class="passport-eyebrow dark">Próximos <span class="tag-keyword">passos</span></span><h2>A campanha entra na fase final.</h2></div><p>A comissão técnica conclui a seleção e o público escolhe um dos três projetos finalistas. A confirmação é individual e não pode ser alterada depois de registrada.</p></div>
+ <div class="campaign-steps campaign-phase-steps">
+  <article class="is-complete"><span class="step-number">01</span><span class="phase-status">Concluída</span><h3>Inscrições</h3><p>Profissionais de arquitetura, design de interiores e decoração enviaram seus projetos dentro do período oficial.</p><small>01/10 a 13/11/2026</small></article>
+  <article class="is-current"><span class="step-number">02</span><span class="phase-status">Em andamento</span><h3>Seleção dos finalistas</h3><p>A comissão técnica avalia os projetos e seleciona os três finalistas que participarão da votação popular.</p><small>Publicação antes da abertura da votação</small><?php if (\App\Core\Settings::bool('page_jurors_enabled', false)): ?><a class="campaign-jurors-link" href="/jurados">Conheça os jurados <span aria-hidden="true">↗</span></a><?php endif; ?></article>
+  <article><span class="step-number">03</span><span class="phase-status">Próxima etapa</span><h3>Votação popular</h3><p>Conheça os três projetos, escolha apenas um e confirme o voto após a verificação de segurança.</p><small>25/11 a 11/12/2026<br>Resultado até 14/12/2026</small></article>
  </div>
- <figure class="campaign-editorial-image"><img src="/assets/img/home-jantar-2027-v2.jpg" alt="Sala de jantar com mesa de madeira, cadeiras em vinho e cinza e piso amadeirado" loading="lazy" width="1536" height="1024"><figcaption>Imagem ilustrativa. Não representa projeto inscrito.</figcaption></figure>
 </section>
-<section class="campaign-eligibility">
- <div><span class="passport-eyebrow dark">Seu <span class="tag-keyword">projeto</span></span><h2>O que o cadastro precisa ter</h2></div>
- <ul><li>Ambiente concluído entre <strong>01/01 e 13/11/2026</strong>.</li><li>Piso NGC ou vinílico Ruffino, sem piso de marca concorrente no ambiente inscrito.</li><li>Fotos reais: não são aceitos renders, maquetes eletrônicas ou imagens geradas por IA.</li><li>Você deve ser autor ou coautor e ter autorização para usar as imagens.</li></ul>
+
+<section class="campaign-eligibility campaign-how-to-vote">
+ <div><span class="passport-eyebrow dark">Como <span class="tag-keyword">votar</span></span><h2>Uma escolha simples, individual e auditável.</h2></div>
+ <ol>
+  <li><strong>Conheça os finalistas.</strong> A ordem dos três projetos muda a cada visita.</li>
+  <li><strong>Escolha um projeto.</strong> Você pode trocar a seleção antes de confirmar.</li>
+  <li><strong>Faça a verificação.</strong> Resolva o captcha simples e aceite as condições da votação.</li>
+  <li><strong>Confirme uma única vez.</strong> Depois da confirmação, o voto não poderá ser alterado.</li>
+ </ol>
 </section>
-<section class="passport-results-section campaign-prize">
- <div><span class="passport-eyebrow"><span class="tag-keyword">Experiência</span> Ruffino</span><h2>Seu próximo destino:<br><span>Expo Revestir 2027.</span></h2><p>O autor do projeto vencedor embarca para São Paulo como convidado VIP da Ruffino.</p></div>
- <div><ul class="prize-list"><li>Passagem aérea de ida e volta, com origem no Brasil</li><li>1 diária de hotel, conforme disponibilidade</li><li>Traslado entre aeroporto, hotel e evento</li><li>R$ 1.000 em voucher de alimentação</li><li>Participação como convidado VIP da Ruffino</li></ul><p>Prêmio pessoal e intransferível. Consulte as condições completas no regulamento.</p></div>
+
+<section class="passport-results-section campaign-trust">
+ <div><span class="passport-eyebrow">Participação responsável</span><h2>Votação protegida contra manipulação.</h2><p>A participação é permitida somente a pessoas no Brasil. Automação, compra de votos e outras formas de manipulação são proibidas e podem levar à invalidação após auditoria.</p></div>
+ <div class="campaign-trust-links"><h3>Transparência e privacidade</h3><p>Registramos apenas os sinais necessários para validar a participação, investigar fraude e preservar a integridade da campanha, conforme o aviso de privacidade.</p><a href="/regulamento/profissionais">Regulamento da campanha</a><a href="/privacidade">Privacidade e tratamento de dados</a><a href="/auditoria">Como a votação é auditada</a></div>
 </section>

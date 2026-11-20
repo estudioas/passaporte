@@ -48,5 +48,5 @@
 </section>
 <section class="jurors-cta" aria-labelledby="jurors-cta-title">
     <div><span class="passport-eyebrow"><span class="tag-keyword">Passaporte</span> Ruffino</span><h2 id="jurors-cta-title">Pronto para embarcar nessa?</h2><p>Seu projeto pode levar você à Expo Revestir 2027.</p></div>
-    <div class="jurors-cta-links"><a class="passport-primary-cta" href="https://www.ruffinoacabamentos.com/passaporte-revestir">Faça seu cadastro <span aria-hidden="true">↗</span></a><a href="/regulamento/profissionais">Consulte o regulamento</a></div>
+    <div class="jurors-cta-links"><a class="passport-primary-cta" href="/">Acompanhe a fase final <span aria-hidden="true">→</span></a><a href="/regulamento/profissionais">Consulte o regulamento</a></div>
 </section>

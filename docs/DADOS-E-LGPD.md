@@ -4,7 +4,7 @@
 
 | Dado | Forma armazenada | Finalidade | Retenção proposta |
 |---|---|---|---|
-| IP | HMAC-SHA-256, sem IP bruto | correlação de abuso e limite opcional | 24 meses após o resultado |
+| IP | valor completo criptografado com AES-256-GCM e HMAC-SHA-256 para correlação | auditoria restrita, correlação de abuso e limite opcional | 24 meses após o resultado |
 | Dispositivo | cookie aleatório + HMAC no banco | impedir segunda confirmação | 24 meses após o resultado |
 | Navegador | HMAC do user-agent | correlação antifraude | 24 meses após o resultado |
 | País | código de duas letras | bloquear votos fora do Brasil | 24 meses após o resultado |
@@ -12,7 +12,7 @@
 | Risco e sinais | código e lista curta | revisão humana | 24 meses após o resultado |
 | Voto e recibo | finalista, status e código aleatório | apuração e prova do voto | 24 meses após o resultado |
 
-Não são registrados IP bruto, coordenadas, impressão digital invasiva, histórico de navegação externo, contatos do eleitor ou conteúdo de redes sociais.
+Não são registrados coordenadas precisas, impressão digital invasiva, histórico de navegação externo, contatos de quem vota ou conteúdo de redes sociais. O IP completo não fica em texto aberto: é criptografado e sua consulta exige permissão administrativa específica.
 
 ## Inscrição
 

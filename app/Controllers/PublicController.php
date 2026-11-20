@@ -27,7 +27,12 @@ final class PublicController
     {
         if (!$this->pageAvailable('home', true)) return;
         $this->logPageView('home');
-        View::render('home', ['title' => 'Como participar da campanha']);
+        View::render('home', [
+            'title' => 'Votação popular · Passaporte Ruffino',
+            'description' => 'Acompanhe a fase final da campanha Passaporte Ruffino e vote em um dos três projetos finalistas.',
+            'votingPublished' => Settings::bool('page_voting_enabled', false),
+            'votingOpen' => Campaign::isVotingOpen(),
+        ]);
     }
 
     private function pageAvailable(string $page, bool $default = false): bool
@@ -102,8 +107,12 @@ final class PublicController
         $risk = 0;
         $signals = [];
         if (trim((string) ($_POST['website'] ?? '')) !== '') {
-            $risk = 100;
-            $signals[] = 'honeypot';
+            Audit::log('vote.rejected', ['reason' => 'honeypot', 'signals' => ['honeypot']], 'visitor', null, 100);
+            Response::json(['ok' => false, 'message' => 'Não foi possível validar esta participação.'], 422);
+        }
+        if (($_POST['terms_accepted'] ?? '') !== '1') {
+            Audit::log('vote.rejected', ['reason' => 'terms_not_accepted'], 'visitor', null, 40);
+            Response::json(['ok' => false, 'message' => 'Aceite o regulamento e o aviso de privacidade para confirmar.'], 422);
         }
         if (!Captcha::verify('vote', $_POST['captcha_id'] ?? null, $_POST['captcha_answer'] ?? null)) {
             $risk = max($risk, 75);
@@ -202,6 +211,8 @@ final class PublicController
                     'elapsed_seconds' => max(0, $elapsed),
                     'signals' => $signals,
                     'status' => $status,
+                    'terms_accepted' => true,
+                    'terms_version' => '2026-11-20',
                 ], 'visitor', null, $risk, $pdo);
                 $pdo->prepare('UPDATE votes SET audit_event_id = ? WHERE id = ?')->execute([$eventId, $voteId]);
                 return ['duplicate' => false, 'receipt' => $receiptCode, 'status' => $status];

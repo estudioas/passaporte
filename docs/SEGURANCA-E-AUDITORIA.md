@@ -7,8 +7,9 @@ O voto só é persistido depois de o visitante:
 1. escolher um dos três projetos ativos;
 2. abrir a confirmação;
 3. resolver o CAPTCHA aritmético de uso único;
-4. confirmar a escolha dentro do período oficial;
-5. passar pela validação de país.
+4. aceitar o regulamento e o aviso de privacidade;
+5. confirmar a escolha dentro do período oficial;
+6. passar pela validação de país.
 
 Antes da confirmação, a pessoa pode trocar livremente de projeto. Depois dela, a restrição única em `votes.device_hash` impede outro voto no mesmo identificador de dispositivo.
 
@@ -22,7 +23,7 @@ Se o risco reputacional exigir identidade individual forte, faça uma versão ap
 
 - país diferente de BR ou país ausente: rejeição;
 - CAPTCHA incorreto: rejeição e evento de alto risco;
-- honeypot preenchido: risco máximo;
+- honeypot preenchido: rejeição imediata;
 - navegador ausente ou típico de automação: +35;
 - idioma do navegador ausente: +10;
 - confirmação em menos de oito segundos: +30;
@@ -56,7 +57,9 @@ O estado da cadeia é bloqueado dentro de transação antes de cada gravação p
 - validação real de MIME, tamanho e estrutura de imagens;
 - arquivos enviados fora da pasta pública, com nome aleatório e hash SHA-256;
 - dados pessoais de inscrição criptografados com AES-256-GCM;
-- IP, navegador e dispositivo guardados apenas como HMAC-SHA-256;
+- IP completo criptografado com AES-256-GCM e acesso restrito por permissão;
+- IP, navegador e dispositivo também correlacionados por HMAC-SHA-256;
+- aceite do regulamento e da privacidade registrado com a versão dos termos;
 - exclusão lógica de finalista ativo, preservando histórico referenciado por votos.
 
 ## Checklist antes da abertura

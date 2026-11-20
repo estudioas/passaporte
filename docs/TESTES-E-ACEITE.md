@@ -2,12 +2,16 @@
 
 ## Público
 
-- [ ] A home mostra exatamente três finalistas.
-- [ ] A ordem muda entre visitas sem mudar os dados de cada projeto.
+- [ ] A home informa inscrições encerradas, próximos passos e datas oficiais.
+- [ ] A página de votação mostra exatamente três finalistas.
+- [ ] A ordem dos finalistas muda entre visitas sem mudar os dados de cada projeto.
 - [ ] É possível trocar a escolha antes de confirmar.
 - [ ] Fechar a janela não registra voto.
 - [ ] CAPTCHA incorreto não registra voto.
+- [ ] Sem aceite do regulamento e da privacidade, o voto não é registrado.
+- [ ] Honeypot preenchido rejeita a tentativa imediatamente.
 - [ ] Voto fora do Brasil é rejeitado.
+- [ ] País não identificado também é rejeitado.
 - [ ] Primeiro voto válido gera recibo.
 - [ ] Segunda tentativa no mesmo dispositivo é rejeitada e mostra o recibo original.
 - [ ] O recibo é localizado em `/auditoria`.
@@ -35,6 +39,7 @@
 - [ ] Voto de risco alto entra em revisão e fica fora do ranking.
 - [ ] Alterar status gera evento de auditoria.
 - [ ] Filtros de risco e status funcionam.
+- [ ] O painel mostra o aceite e a versão dos termos nos votos novos.
 - [ ] Exportação CSV abre corretamente em UTF-8.
 - [ ] `php bin/verify-audit.php` retorna cadeia válida.
 - [ ] Contas de auditor não compartilham senha com administrador.
