@@ -34,6 +34,127 @@
     show(0);
   });
 
+  const imageLightbox = document.querySelector('[data-image-lightbox]');
+  if (imageLightbox) {
+    const lightboxImage = imageLightbox.querySelector('[data-lightbox-image]');
+    const lightboxCaption = imageLightbox.querySelector('[data-lightbox-caption]');
+    document.querySelectorAll('[data-image-zoom]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const image = button.closest('[data-carousel-slide]')?.querySelector('img');
+        if (!image) return;
+        lightboxImage.src = image.currentSrc || image.src;
+        lightboxImage.alt = image.alt;
+        lightboxCaption.textContent = image.alt;
+        imageLightbox.showModal();
+      });
+    });
+    imageLightbox.addEventListener('click', (event) => {
+      if (event.target === imageLightbox) imageLightbox.close();
+    });
+  }
+
+  document.querySelectorAll('[data-gallery-sortable]').forEach((grid) => {
+    let dragged = null;
+    let originalOrder = [];
+    const status = grid.parentElement?.querySelector('[data-gallery-order-status]');
+    const items = () => [...grid.querySelectorAll('[data-gallery-image]')];
+    const ids = () => items().map((item) => item.dataset.imageId);
+    const refreshLabels = () => {
+      const ordered = items();
+      ordered.forEach((item, index) => {
+        const label = item.querySelector('[data-photo-number]');
+        if (label) label.textContent = `Foto ${index + 1}`;
+        item.querySelectorAll('input[name="direction"]').forEach((input) => {
+          const button = input.closest('form')?.querySelector('button');
+          if (button) button.disabled = input.value === 'up' ? index === 0 : index === ordered.length - 1;
+        });
+      });
+    };
+    const restore = (order) => {
+      const byId = new Map(items().map((item) => [item.dataset.imageId, item]));
+      order.forEach((id) => { if (byId.has(id)) grid.append(byId.get(id)); });
+      refreshLabels();
+    };
+    const save = async (previousOrder) => {
+      const body = new URLSearchParams({_csrf: grid.dataset.csrf || '', finalist_id: grid.dataset.finalistId || ''});
+      ids().forEach((id) => body.append('image_ids[]', id));
+      grid.classList.add('is-saving');
+      if (status) status.textContent = 'Salvando nova ordem…';
+      try {
+        const response = await fetch(grid.dataset.reorderUrl, {method: 'POST', credentials: 'same-origin', headers: {Accept: 'application/json'}, body});
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || 'Não foi possível salvar a ordem.');
+        refreshLabels();
+        if (status) status.textContent = 'Ordem salva.';
+      } catch (error) {
+        restore(previousOrder);
+        if (status) status.textContent = error.message || 'Não foi possível salvar a ordem.';
+      } finally {
+        grid.classList.remove('is-saving');
+      }
+    };
+    grid.addEventListener('dragstart', (event) => {
+      const item = event.target.closest('[data-gallery-image]');
+      if (!item || item.classList.contains('is-cover') || grid.classList.contains('is-saving')) {
+        event.preventDefault();
+        return;
+      }
+      dragged = item;
+      originalOrder = ids();
+      item.classList.add('is-dragging');
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', item.dataset.imageId || '');
+    });
+    grid.addEventListener('dragover', (event) => {
+      if (!dragged) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      const target = event.target.closest('[data-gallery-image]');
+      if (!target || target === dragged) return;
+      if (target.classList.contains('is-cover')) {
+        target.after(dragged);
+        return;
+      }
+      const rect = target.getBoundingClientRect();
+      const after = event.clientY > rect.top + rect.height / 2;
+      grid.insertBefore(dragged, after ? target.nextSibling : target);
+    });
+    grid.addEventListener('drop', (event) => event.preventDefault());
+    grid.addEventListener('dragend', () => {
+      if (!dragged) return;
+      dragged.classList.remove('is-dragging');
+      const changed = originalOrder.join(',') !== ids().join(',');
+      const previousOrder = originalOrder;
+      dragged = null;
+      originalOrder = [];
+      if (changed) save(previousOrder);
+    });
+  });
+
+  document.querySelectorAll('.gallery-upload-form').forEach((form) => {
+    form.addEventListener('submit', (event) => {
+      const input = form.querySelector('input[type="file"]');
+      const files = [...(input?.files || [])];
+      const oversized = files.find((file) => file.size > 8 * 1024 * 1024);
+      if (oversized) {
+        event.preventDefault();
+        window.alert(`A foto “${oversized.name}” ultrapassa o limite de 8 MB.`);
+        return;
+      }
+      const total = files.reduce((sum, file) => sum + file.size, 0);
+      if (total > 88 * 1024 * 1024) {
+        event.preventDefault();
+        window.alert('O lote ultrapassa o limite de envio. Selecione menos fotos e envie em duas etapas.');
+        return;
+      }
+      const button = form.querySelector('button[type="submit"], button:not([type])');
+      if (button) {
+        button.disabled = true;
+        button.textContent = 'Enviando fotos…';
+      }
+    });
+  });
+
   const analyticsView = document.body.dataset.analyticsView;
   if (analyticsView) {
     let pending = false;

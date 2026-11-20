@@ -65,11 +65,11 @@ O banco GeoIP da Hostinger é atualizado semanalmente. O sistema rejeita país a
 
 ## 7. Ajustar PHP
 
-Selecione PHP 8.1+ e confirme as extensões PDO MySQL, OpenSSL, Fileinfo e Mbstring. O arquivo `public/.user.ini` solicita limites adequados para cinco imagens; o valor efetivo do plano prevalece. No hPanel, confirme:
+Selecione PHP 8.1+ e confirme as extensões PDO MySQL, OpenSSL, Fileinfo e Mbstring. Os arquivos `.user.ini` da raiz e de `public/` cobrem os dois modos de instalação e solicitam limites adequados para até dez imagens; o valor efetivo do plano prevalece. No hPanel, confirme:
 
 - `upload_max_filesize` ≥ 10 MB;
-- `post_max_size` ≥ 55 MB;
-- `max_file_uploads` ≥ 10;
+- `post_max_size` ≥ 96 MB;
+- `max_file_uploads` ≥ 12;
 - `display_errors` desligado.
 
 ## 8. Configurar a campanha

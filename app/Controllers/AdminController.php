@@ -159,6 +159,11 @@ final class AdminController
     public function uploadFinalistImages(): never
     {
         $user = Auth::requirePermission('finalists');
+        $contentLength = (int) ($_SERVER['CONTENT_LENGTH'] ?? 0);
+        if ($contentLength > 0 && empty($_POST) && empty($_FILES)) {
+            $_SESSION['admin_error'] = 'O lote de fotos ultrapassou o limite do servidor. Envie menos imagens por vez ou reduza o tamanho dos arquivos.';
+            Response::redirect('/admin/finalistas');
+        }
         if (!Csrf::verify($_POST['_csrf'] ?? null)) {
             $_SESSION['admin_error'] = 'Sessão expirada.';
             Response::redirect('/admin/finalistas');
@@ -188,7 +193,17 @@ final class AdminController
         $validated = [];
         try {
             foreach ($files as $file) {
-                if ((int) $file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file((string) $file['tmp_name'])) {
+                $uploadError = (int) $file['error'];
+                if ($uploadError !== UPLOAD_ERR_OK) {
+                    $message = match ($uploadError) {
+                        UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Uma das fotos ultrapassa o limite de 8 MB.',
+                        UPLOAD_ERR_PARTIAL => 'Uma das fotos foi enviada apenas parcialmente. Tente novamente.',
+                        UPLOAD_ERR_NO_TMP_DIR, UPLOAD_ERR_CANT_WRITE => 'O servidor não conseguiu armazenar as fotos temporariamente. Tente novamente em instantes.',
+                        default => 'Uma das fotos não foi recebida corretamente.',
+                    };
+                    throw new RuntimeException($message);
+                }
+                if (!is_uploaded_file((string) $file['tmp_name'])) {
                     throw new RuntimeException('Uma das fotos não foi recebida corretamente.');
                 }
                 if ((int) $file['size'] < 1 || (int) $file['size'] > $maxBytes) {
@@ -337,6 +352,69 @@ final class AdminController
             });
         }
         Response::redirect('/admin/finalistas#finalista-' . (int) $image['finalist_id']);
+    }
+
+    public function reorderFinalistImages(): never
+    {
+        $user = Auth::requirePermission('finalists');
+        if (!Csrf::verify($_POST['_csrf'] ?? null)) {
+            Response::json(['ok' => false, 'message' => 'Sessão expirada. Atualize a página e tente novamente.'], 419);
+        }
+        Schema::ensureFinalistImages();
+        $finalistId = (int) ($_POST['finalist_id'] ?? 0);
+        $submitted = $_POST['image_ids'] ?? [];
+        $imageIds = is_array($submitted)
+            ? array_values(array_unique(array_filter(array_map('intval', $submitted), static fn (int $id): bool => $id > 0)))
+            : [];
+
+        if ($finalistId < 1 || !$imageIds) {
+            Response::json(['ok' => false, 'message' => 'A ordem enviada é inválida.'], 422);
+        }
+
+        try {
+            Database::transaction(function ($pdo) use ($finalistId, $imageIds, $user): void {
+                $stmt = $pdo->prepare(
+                    'SELECT id, is_cover FROM finalist_images WHERE finalist_id = ? ORDER BY is_cover DESC, sort_order ASC, id ASC FOR UPDATE'
+                );
+                $stmt->execute([$finalistId]);
+                $images = $stmt->fetchAll();
+                $storedIds = array_map(static fn (array $row): int => (int) $row['id'], $images);
+                $submittedIds = $imageIds;
+                sort($storedIds);
+                sort($submittedIds);
+                if ($storedIds !== $submittedIds) {
+                    throw new RuntimeException('A galeria mudou. Atualize a página antes de reorganizar novamente.');
+                }
+
+                $coverId = null;
+                foreach ($images as $image) {
+                    if ((int) $image['is_cover'] === 1) {
+                        $coverId = (int) $image['id'];
+                        break;
+                    }
+                }
+                if ($coverId !== null && $imageIds[0] !== $coverId) {
+                    throw new RuntimeException('A foto de capa deve permanecer na primeira posição.');
+                }
+
+                $update = $pdo->prepare('UPDATE finalist_images SET sort_order = ? WHERE id = ? AND finalist_id = ?');
+                foreach ($imageIds as $index => $imageId) {
+                    $update->execute([$index + 1, $imageId, $finalistId]);
+                }
+                Audit::log(
+                    'admin.finalist_images_reordered',
+                    ['finalist_id' => $finalistId, 'image_ids' => $imageIds],
+                    'admin',
+                    (int) $user['id'],
+                    0,
+                    $pdo
+                );
+            });
+        } catch (RuntimeException $e) {
+            Response::json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        Response::json(['ok' => true, 'message' => 'Ordem das fotos salva.']);
     }
 
     public function deleteFinalistImage(): never

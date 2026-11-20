@@ -49,10 +49,10 @@ $identityColors = ['#8e281f', '#315f5a', '#66507a'];
                     <div class="candidate-slides">
                     <?php if ($projectImages): ?>
                         <?php foreach ($projectImages as $imageIndex => $image): ?>
-                            <figure class="candidate-image" data-carousel-slide <?= $imageIndex === 0 ? '' : 'hidden' ?>><img src="/media/finalistas/<?= (int) $image['id'] ?>" alt="<?= $h($image['alt_text']) ?>" width="<?= (int) $image['width_px'] ?>" height="<?= (int) $image['height_px'] ?>" <?= $imageIndex === 0 ? '' : 'loading="lazy"' ?>></figure>
+                            <figure class="candidate-image" data-carousel-slide <?= $imageIndex === 0 ? '' : 'hidden' ?>><img src="/media/finalistas/<?= (int) $image['id'] ?>" alt="<?= $h($image['alt_text']) ?>" width="<?= (int) $image['width_px'] ?>" height="<?= (int) $image['height_px'] ?>" <?= $imageIndex === 0 ? '' : 'loading="lazy"' ?>><button class="candidate-zoom" type="button" data-image-zoom aria-label="Ampliar esta foto" title="Ver foto em detalhes"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5M10.5 7.5v6M7.5 10.5h6"></path></svg></button></figure>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <figure class="candidate-image" data-carousel-slide><img src="<?= $h($fallback) ?>" alt="Projeto <?= $h($finalist['project_title']) ?>" loading="lazy"></figure>
+                        <figure class="candidate-image" data-carousel-slide><img src="<?= $h($fallback) ?>" alt="Projeto <?= $h($finalist['project_title']) ?>" loading="lazy"><button class="candidate-zoom" type="button" data-image-zoom aria-label="Ampliar esta foto" title="Ver foto em detalhes"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5M10.5 7.5v6M7.5 10.5h6"></path></svg></button></figure>
                     <?php endif; ?>
                     </div>
                     <span class="candidate-identity">Projeto finalista</span>
@@ -72,6 +72,11 @@ $identityColors = ['#8e281f', '#315f5a', '#66507a'];
     </div>
     <p class="vote-period-status"><?= $votingOpen ? 'Votação aberta até 11/12/2026, às 23h59 (horário de Brasília).' : 'Votação disponível de 25/11/2026 a 11/12/2026.' ?></p>
 </section>
+
+<dialog class="image-lightbox" data-image-lightbox aria-label="Visualização ampliada da foto">
+    <form method="dialog" class="image-lightbox-close"><button value="cancel" aria-label="Fechar imagem ampliada">×</button></form>
+    <figure><img data-lightbox-image src="" alt=""><figcaption data-lightbox-caption></figcaption></figure>
+</dialog>
 
 <?php if ($rankingEnabled): ?>
 <section id="resultado" class="passport-results-section" aria-labelledby="ranking-title">

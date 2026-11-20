@@ -40,7 +40,7 @@
                         <input type="hidden" name="finalist_id" value="<?= (int)$row['id'] ?>">
                         <label>Adicionar fotos JPG, PNG ou WebP
                             <input type="file" name="images[]" accept="image/jpeg,image/png,image/webp" multiple required>
-                            <span>Até <?= (int)$maxImages ?> fotos por projeto, 8 MB por arquivo e mínimo de 600 × 600 px.</span>
+                            <span>Até <?= (int)$maxImages ?> fotos por projeto, 8 MB por arquivo e mínimo de 600 × 600 px. Para arquivos grandes, envie em lotes menores.</span>
                         </label>
                         <button class="button secondary small" <?= count($row['images']) >= (int)$maxImages ? 'disabled' : '' ?>>Enviar para o carrossel</button>
                     </form>
@@ -48,11 +48,12 @@
                     <?php if(!$row['images']): ?>
                         <div class="gallery-empty">Nenhuma foto enviada. Enquanto isso, a imagem externa de reserva será usada.</div>
                     <?php else: ?>
-                        <div class="gallery-admin-grid">
+                        <p class="gallery-sort-help">Arraste as fotos para mudar a ordem do carrossel. A capa permanece fixa na primeira posição.</p>
+                        <div class="gallery-admin-grid" data-gallery-sortable data-reorder-url="/admin/finalistas/imagens/ordenar" data-finalist-id="<?= (int)$row['id'] ?>" data-csrf="<?= $h(Csrf::token()) ?>">
                         <?php foreach($row['images'] as $imageIndex => $image): ?>
-                            <article class="gallery-admin-item <?= (int)$image['is_cover']===1?'is-cover':'' ?>">
+                            <article class="gallery-admin-item <?= (int)$image['is_cover']===1?'is-cover':'' ?>" data-gallery-image data-image-id="<?= (int)$image['id'] ?>" draggable="<?= (int)$image['is_cover']===1?'false':'true' ?>">
                                 <div class="gallery-admin-preview"><img src="/media/finalistas/<?= (int)$image['id'] ?>" alt="<?= $h($image['alt_text']) ?>" loading="lazy"><?php if((int)$image['is_cover']===1): ?><span>Capa</span><?php endif; ?></div>
-                                <div class="gallery-admin-meta"><strong>Foto <?= $imageIndex + 1 ?></strong><small><?= (int)$image['width_px'] ?> × <?= (int)$image['height_px'] ?> px · <?= number_format((int)$image['size_bytes']/1048576, 1, ',', '.') ?> MB</small></div>
+                                <div class="gallery-admin-meta"><strong data-photo-number>Foto <?= $imageIndex + 1 ?></strong><small><?= (int)$image['width_px'] ?> × <?= (int)$image['height_px'] ?> px · <?= number_format((int)$image['size_bytes']/1048576, 1, ',', '.') ?> MB</small><span class="gallery-drag-handle"><?= (int)$image['is_cover']===1?'Capa fixa':'⋮⋮ Arraste para ordenar' ?></span></div>
                                 <div class="gallery-admin-actions">
                                     <?php if((int)$image['is_cover']!==1): ?>
                                     <form action="/admin/finalistas/imagens/capa" method="post"><input type="hidden" name="_csrf" value="<?= $h(Csrf::token()) ?>"><input type="hidden" name="image_id" value="<?= (int)$image['id'] ?>"><button>Usar como capa</button></form>
@@ -64,6 +65,7 @@
                             </article>
                         <?php endforeach; ?>
                         </div>
+                        <p class="gallery-order-status" data-gallery-order-status aria-live="polite"></p>
                     <?php endif; ?>
                 </section>
             </div>

@@ -68,6 +68,7 @@ $routes = [
         '/admin/finalistas/imagens/enviar' => [$admin, 'uploadFinalistImages'],
         '/admin/finalistas/imagens/capa' => [$admin, 'setFinalistImageCover'],
         '/admin/finalistas/imagens/mover' => [$admin, 'moveFinalistImage'],
+        '/admin/finalistas/imagens/ordenar' => [$admin, 'reorderFinalistImages'],
         '/admin/finalistas/imagens/excluir' => [$admin, 'deleteFinalistImage'],
         '/admin/auditoria/voto' => [$admin, 'updateVote'],
         '/admin/configuracoes' => [$admin, 'saveSettings'],
