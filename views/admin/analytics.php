@@ -13,6 +13,44 @@
 <article><span>Sessões de uma página</span><strong><?= number_format((float) $report['sessions']['single_page'], 1, ',', '.') ?>%</strong><small>não equivale à taxa de rejeição</small></article>
 <article><span>Cidade não informada</span><strong><?= $n($report['unknown_city']) ?></strong><small>visualizações sem localização municipal</small></article>
 </section>
+<?php $regional = $report['regional_votes']; $topState = $regional['top_state']; $topCity = $regional['top_city']; ?>
+<section class="admin-panel regional-votes-panel" data-regional-map>
+<div class="panel-heading"><div><span>Auditoria geográfica dos votos</span><h2>Origem e liderança por região</h2></div><small>Somente votos válidos do Brasil · <?= $h($range['start']) ?> a <?= $h($range['end']) ?></small></div>
+<p class="analytics-note">A localização corresponde à UF e à cidade informadas pela infraestrutura de rede no momento da confirmação. O mapa não expõe endereços IP e não altera a apuração.</p>
+<div class="regional-summary">
+<article><span>Votos válidos localizados</span><strong><?= $n($regional['located']) ?></strong><small><?= $n($regional['unlocated']) ?> sem UF identificada</small></article>
+<article><span>Estado com mais votos</span><strong><?= $topState ? $h($topState['name']) : '—' ?></strong><small><?= $topState ? $n($topState['total']) . ' votos válidos' : 'Ainda sem dados' ?></small></article>
+<article><span>Cidade com mais votos</span><strong><?= $topCity ? $h($topCity['name']) : '—' ?></strong><small><?= $topCity ? $h($topCity['uf']) . ' · ' . $n($topCity['total']) . ' votos válidos' : 'Ainda sem dados' ?></small></article>
+</div>
+<div class="regional-map-layout">
+<div class="regional-map-visual">
+<object type="image/svg+xml" data="/assets/img/brasil-estados.svg?v=1" aria-label="Mapa interativo do Brasil dividido por estados" data-brazil-map-object></object>
+<p><span class="map-scale map-scale-0"></span>Sem votos <span class="map-scale map-scale-1"></span>Menor volume <span class="map-scale map-scale-4"></span>Maior volume</p>
+</div>
+<aside class="regional-map-detail" data-region-detail aria-live="polite">
+<span data-region-kicker>Selecione um estado</span>
+<h3 data-region-name>Mapa do Brasil</h3>
+<p data-region-summary>Passe o cursor, use Tab ou clique em um estado para comparar os finalistas.</p>
+<div data-region-candidates></div>
+<div data-region-cities></div>
+</aside>
+</div>
+<script type="application/json" data-regional-vote-data><?= json_encode($regional, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
+<details class="regional-cross-table"><summary>Cruzar por estado, cidade e projeto</summary>
+<div class="table-wrap"><table><thead><tr><th>Estado</th><th>Região</th><th>Origem principal</th><th>Líder no estado</th><th>Percentuais dos projetos</th><th>Votos válidos</th></tr></thead><tbody>
+<?php foreach ($regional['states'] as $state): ?>
+<tr><td><button type="button" class="regional-table-select" data-select-uf="<?= $h($state['uf']) ?>"><?= $h($state['name']) ?> · <?= $h($state['uf']) ?></button></td><td><?= $h($state['macroregion']) ?></td><td><?= $state['cities'] ? $h($state['cities'][0]['name']) : 'Cidade não informada' ?></td><td><?= $state['tie'] ? 'Empate · ' . number_format((float) $state['leader']['percentage'], 1, ',', '.') . '%' : ($state['leader'] ? $h($state['leader']['project']) . ' · ' . number_format((float) $state['leader']['percentage'], 1, ',', '.') . '%' : 'Sem dados') ?></td><td><?php foreach ($state['candidates'] as $candidate): ?><span class="regional-table-percentage"><?= $h($candidate['project']) ?>: <?= number_format((float) $candidate['percentage'], 1, ',', '.') ?>%</span><?php endforeach; ?></td><td><?= $n($state['total']) ?></td></tr>
+<?php endforeach; ?>
+<?php if (!$regional['states']): ?><tr><td colspan="6">Ainda não há votos válidos com UF identificada neste período.</td></tr><?php endif; ?>
+</tbody></table></div></details>
+<details class="regional-cross-table"><summary>Comparar as cinco macrorregiões</summary>
+<div class="table-wrap"><table><thead><tr><th>Região</th><th>Participação nacional</th><th>Líder regional</th><th>Percentuais dos projetos</th><th>Votos válidos</th></tr></thead><tbody>
+<?php foreach ($regional['macroregions'] as $macro): $share = $regional['located'] ? $macro['total'] * 100 / $regional['located'] : 0; ?>
+<tr><td><?= $h($macro['name']) ?></td><td><?= number_format($share, 1, ',', '.') ?>%</td><td><?= $macro['tie'] ? 'Empate · ' . number_format((float) $macro['leader']['percentage'], 1, ',', '.') . '%' : ($macro['leader'] ? $h($macro['leader']['project']) . ' · ' . number_format((float) $macro['leader']['percentage'], 1, ',', '.') . '%' : 'Sem dados') ?></td><td><?php foreach ($macro['candidates'] as $candidate): ?><span class="regional-table-percentage"><?= $h($candidate['project']) ?>: <?= number_format((float) $candidate['percentage'], 1, ',', '.') ?>%</span><?php endforeach; ?></td><td><?= $n($macro['total']) ?></td></tr>
+<?php endforeach; ?>
+<?php if (!$regional['macroregions']): ?><tr><td colspan="5">Ainda não há dados regionais neste período.</td></tr><?php endif; ?>
+</tbody></table></div></details>
+</section>
 <section class="admin-panel"><div class="panel-heading"><h2>Evolução diária</h2><small>Visualizações e visitantes únicos</small></div>
 <?php $max = max(1, ...array_column($report['daily'], 'views')); $days = array_column($report['daily'], null, 'day'); ?>
 <div class="analytics-chart" role="img" aria-label="Visualizações diárias. Valores disponíveis na tabela abaixo.">

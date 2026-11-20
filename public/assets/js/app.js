@@ -440,4 +440,121 @@
       }
     });
   });
+
+  const regionalMap = document.querySelector('[data-regional-map]');
+  if (regionalMap) {
+    const dataNode = regionalMap.querySelector('[data-regional-vote-data]');
+    const mapObject = regionalMap.querySelector('[data-brazil-map-object]');
+    const nameNode = regionalMap.querySelector('[data-region-name]');
+    const kickerNode = regionalMap.querySelector('[data-region-kicker]');
+    const summaryNode = regionalMap.querySelector('[data-region-summary]');
+    const candidatesNode = regionalMap.querySelector('[data-region-candidates]');
+    const citiesNode = regionalMap.querySelector('[data-region-cities]');
+    let regionalData = null;
+    try { regionalData = JSON.parse(dataNode?.textContent || '{}'); } catch (_) { regionalData = {}; }
+    const states = regionalData.states || {};
+    const volumes = Object.values(states).map((state) => Number(state.total) || 0);
+    const maxVolume = Math.max(1, ...volumes);
+    const palette = ['#e8e2da', '#d8bdb8', '#bd8781', '#9d554f', '#76241f'];
+    let selectedUf = regionalData.top_state?.uf || Object.keys(states)[0] || '';
+
+    const percentage = (value) => `${Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+    const clear = (node) => { while (node?.firstChild) node.removeChild(node.firstChild); };
+    const candidateRow = (candidate, isLeader, isTie) => {
+      const row = document.createElement('div');
+      row.className = 'regional-candidate-row';
+      const heading = document.createElement('div');
+      const title = document.createElement('strong');
+      title.textContent = candidate.project;
+      const value = document.createElement('b');
+      value.textContent = percentage(candidate.percentage);
+      heading.append(title, value);
+      if (isLeader) {
+        const badge = document.createElement('small');
+        badge.textContent = isTie ? 'Empate na liderança' : 'Líder';
+        heading.append(badge);
+      }
+      const track = document.createElement('span');
+      const fill = document.createElement('i');
+      fill.style.width = `${Math.max(0, Math.min(100, Number(candidate.percentage) || 0))}%`;
+      track.appendChild(fill);
+      row.append(heading, track);
+      return row;
+    };
+    const renderState = (uf) => {
+      const state = states[uf];
+      if (!state) return;
+      selectedUf = uf;
+      kickerNode.textContent = `${state.macroregion} · ${state.uf} · ${Number(state.total).toLocaleString('pt-BR')} votos válidos`;
+      nameNode.textContent = state.name;
+      summaryNode.textContent = state.tie
+        ? 'Há empate na liderança neste estado.'
+        : state.leader
+          ? `${state.leader.project} lidera com ${percentage(state.leader.percentage)} dos votos válidos do estado.`
+          : 'Ainda não há votos válidos neste estado no período selecionado.';
+      clear(candidatesNode);
+      state.candidates.forEach((candidate) => {
+        const leads = Boolean(state.leader && candidate.votes === state.leader.votes);
+        candidatesNode.appendChild(candidateRow(candidate, leads, state.tie));
+      });
+      clear(citiesNode);
+      const cityTitle = document.createElement('h4');
+      cityTitle.textContent = 'Principais cidades de origem';
+      citiesNode.appendChild(cityTitle);
+      if (!state.cities.length) {
+        const empty = document.createElement('p');
+        empty.textContent = 'Cidade não informada para os votos deste estado.';
+        citiesNode.appendChild(empty);
+      } else {
+        const list = document.createElement('ol');
+        state.cities.slice(0, 5).forEach((city) => {
+          const item = document.createElement('li');
+          const leader = city.tie ? 'empate' : (city.leader?.project || 'sem líder');
+          item.textContent = `${city.name}: ${Number(city.total).toLocaleString('pt-BR')} · ${leader}`;
+          list.appendChild(item);
+        });
+        citiesNode.appendChild(list);
+      }
+      regionalMap.querySelectorAll('[data-select-uf]').forEach((button) => button.classList.toggle('is-selected', button.dataset.selectUf === uf));
+      const doc = mapObject?.contentDocument;
+      doc?.querySelectorAll('[data-vote-map-state]').forEach((shape) => shape.classList.toggle('is-selected', shape.id === uf));
+    };
+
+    const prepareMap = () => {
+      const doc = mapObject?.contentDocument;
+      if (!doc) return;
+      const style = doc.createElementNS('http://www.w3.org/2000/svg', 'style');
+      style.textContent = '.state{cursor:pointer;transition:fill .18s ease,filter .18s ease;outline:none}.state:hover,.state:focus,.state.is-selected{filter:brightness(.82);stroke:#541813;stroke-width:2.5}.state:focus{stroke:#211d1b;stroke-width:3}';
+      doc.documentElement.appendChild(style);
+      ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].forEach((uf) => {
+        const shape = doc.getElementById(uf);
+        if (!shape) return;
+        const state = states[uf];
+        const volume = Number(state?.total) || 0;
+        const bucket = volume > 0 ? Math.max(1, Math.ceil((volume / maxVolume) * 4)) : 0;
+        shape.style.fill = palette[bucket];
+        shape.setAttribute('data-vote-map-state', '');
+        shape.setAttribute('tabindex', '0');
+        shape.setAttribute('role', 'button');
+        shape.setAttribute('aria-label', state ? `${state.name}, ${state.total} votos válidos` : `${uf}, sem votos no período`);
+        const select = () => state && renderState(uf);
+        shape.addEventListener('mouseenter', select);
+        shape.addEventListener('focus', select);
+        shape.addEventListener('click', select);
+        shape.addEventListener('keydown', (event) => {
+          if (!['Enter', ' '].includes(event.key)) return;
+          event.preventDefault();
+          select();
+        });
+      });
+      if (selectedUf) renderState(selectedUf);
+    };
+    mapObject?.addEventListener('load', prepareMap);
+    if (mapObject?.contentDocument?.documentElement) prepareMap();
+    regionalMap.querySelectorAll('[data-select-uf]').forEach((button) => button.addEventListener('click', () => {
+      renderState(button.dataset.selectUf);
+      regionalMap.querySelector('[data-region-detail]')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }));
+    if (selectedUf) renderState(selectedUf);
+  }
 })();

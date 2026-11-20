@@ -145,7 +145,168 @@ final class Analytics
             $breakdowns[$key] = $query('SELECT ' . $column . ' AS label, COUNT(*) AS views, COUNT(DISTINCT device_hash) AS visitors' . $where . 'GROUP BY label ORDER BY views DESC, label ASC LIMIT 20');
         }
         $conversions = $query('SELECT event_type AS label, COUNT(*) AS total FROM audit_events WHERE created_at >= ? AND created_at < ? AND event_type = "vote.confirmed" GROUP BY event_type');
-        return compact('totals', 'sessions', 'daily', 'breakdowns', 'conversions') + ['online' => self::online(), 'started' => Settings::get('analytics_started_at', ''), 'unknown_city' => (int) $query('SELECT COUNT(*) AS n' . $where . "AND city = ''")[0]['n']];
+        return compact('totals', 'sessions', 'daily', 'breakdowns', 'conversions') + [
+            'online' => self::online(),
+            'started' => Settings::get('analytics_started_at', ''),
+            'unknown_city' => (int) $query('SELECT COUNT(*) AS n' . $where . "AND city = ''")[0]['n'],
+            'regional_votes' => self::regionalVotes($range),
+        ];
+    }
+
+    /**
+     * Regional audit summary built only from valid, Brazilian votes.
+     * IP addresses and hashes never leave the audit tables through this report.
+     */
+    public static function regionalVotes(array $range): array
+    {
+        $pdo = Database::connection();
+        $finalists = $pdo->query('SELECT id, participant_name, project_title FROM finalists ORDER BY sort_order, id')->fetchAll();
+        $stmt = $pdo->prepare('SELECT v.finalist_id, f.participant_name, f.project_title, a.metadata_json
+            FROM votes v
+            JOIN finalists f ON f.id = v.finalist_id
+            LEFT JOIN audit_events a ON a.id = v.audit_event_id
+            WHERE v.status = "valid" AND v.country_code = "BR" AND v.confirmed_at >= ? AND v.confirmed_at < ?');
+        $stmt->execute([$range['start'], $range['until']]);
+
+        $states = [];
+        $macroregions = [];
+        $unlocated = 0;
+        $total = 0;
+        foreach ($stmt->fetchAll() as $row) {
+            $metadata = json_decode((string) ($row['metadata_json'] ?? '{}'), true) ?: [];
+            $uf = self::normalizeState((string) ($metadata['geo_region'] ?? ''));
+            $city = self::normalizeCity((string) ($metadata['geo_city'] ?? ''));
+            $finalistId = (int) $row['finalist_id'];
+            $total++;
+            if ($uf === '') {
+                $unlocated++;
+                continue;
+            }
+            $stateInfo = self::stateInfo()[$uf];
+            if (!isset($states[$uf])) {
+                $states[$uf] = ['uf' => $uf, 'name' => $stateInfo['name'], 'macroregion' => $stateInfo['region'], 'total' => 0, 'votes' => [], 'cities' => []];
+            }
+            $states[$uf]['total']++;
+            $states[$uf]['votes'][$finalistId] = ($states[$uf]['votes'][$finalistId] ?? 0) + 1;
+            if ($city !== '') {
+                if (!isset($states[$uf]['cities'][$city])) {
+                    $states[$uf]['cities'][$city] = ['name' => $city, 'total' => 0, 'votes' => []];
+                }
+                $states[$uf]['cities'][$city]['total']++;
+                $states[$uf]['cities'][$city]['votes'][$finalistId] = ($states[$uf]['cities'][$city]['votes'][$finalistId] ?? 0) + 1;
+            }
+            $macro = $stateInfo['region'];
+            if (!isset($macroregions[$macro])) {
+                $macroregions[$macro] = ['name' => $macro, 'total' => 0, 'votes' => []];
+            }
+            $macroregions[$macro]['total']++;
+            $macroregions[$macro]['votes'][$finalistId] = ($macroregions[$macro]['votes'][$finalistId] ?? 0) + 1;
+        }
+
+        $catalog = [];
+        foreach ($finalists as $finalist) {
+            $catalog[(int) $finalist['id']] = [
+                'id' => (int) $finalist['id'],
+                'project' => (string) $finalist['project_title'],
+                'participant' => (string) $finalist['participant_name'],
+            ];
+        }
+        foreach (self::stateInfo() as $uf => $info) {
+            $states[$uf] ??= ['uf' => $uf, 'name' => $info['name'], 'macroregion' => $info['region'], 'total' => 0, 'votes' => [], 'cities' => []];
+            $macroregions[$info['region']] ??= ['name' => $info['region'], 'total' => 0, 'votes' => []];
+        }
+        foreach ($states as &$state) {
+            $state = self::finishRegion($state, $catalog);
+            $cities = array_values($state['cities']);
+            foreach ($cities as &$city) { $city = self::finishRegion($city, $catalog); }
+            unset($city);
+            usort($cities, static fn (array $a, array $b): int => $b['total'] <=> $a['total'] ?: strcmp($a['name'], $b['name']));
+            $state['cities'] = $cities;
+        }
+        unset($state);
+        foreach ($macroregions as &$macro) { $macro = self::finishRegion($macro, $catalog); }
+        unset($macro);
+        uasort($states, static fn (array $a, array $b): int => $b['total'] <=> $a['total'] ?: strcmp($a['name'], $b['name']));
+        uasort($macroregions, static fn (array $a, array $b): int => $b['total'] <=> $a['total'] ?: strcmp($a['name'], $b['name']));
+
+        $topState = ($total - $unlocated) > 0 && $states ? reset($states) : null;
+        $topCity = null;
+        foreach ($states as $state) {
+            foreach ($state['cities'] as $city) {
+                if ($topCity === null || $city['total'] > $topCity['total']) {
+                    $topCity = $city + ['uf' => $state['uf'], 'state' => $state['name']];
+                }
+            }
+        }
+        return [
+            'total' => $total,
+            'located' => $total - $unlocated,
+            'unlocated' => $unlocated,
+            'states' => $states,
+            'macroregions' => $macroregions,
+            'top_state' => $topState,
+            'top_city' => $topCity,
+            'finalists' => array_values($catalog),
+        ];
+    }
+
+    private static function finishRegion(array $region, array $catalog): array
+    {
+        $candidates = [];
+        foreach ($catalog as $id => $finalist) {
+            $votes = (int) ($region['votes'][$id] ?? 0);
+            $candidates[] = $finalist + [
+                'votes' => $votes,
+                'percentage' => $region['total'] > 0 ? round($votes * 100 / $region['total'], 1) : 0.0,
+            ];
+        }
+        usort($candidates, static fn (array $a, array $b): int => $b['votes'] <=> $a['votes'] ?: strcmp($a['project'], $b['project']));
+        $region['candidates'] = $candidates;
+        $region['leader'] = $candidates && $candidates[0]['votes'] > 0 ? $candidates[0] : null;
+        $region['tie'] = count($candidates) > 1 && $candidates[0]['votes'] > 0 && $candidates[0]['votes'] === $candidates[1]['votes'];
+        unset($region['votes']);
+        return $region;
+    }
+
+    private static function normalizeCity(string $city): string
+    {
+        $city = preg_replace('/\s+/u', ' ', trim($city)) ?? '';
+        return mb_substr($city, 0, 150);
+    }
+
+    private static function normalizeState(string $region): string
+    {
+        $region = trim($region);
+        $upper = strtoupper($region);
+        if (isset(self::stateInfo()[$upper])) { return $upper; }
+        $plain = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', mb_strtolower($region, 'UTF-8'));
+        $plain = preg_replace('/[^a-z]+/', ' ', is_string($plain) ? $plain : '') ?? '';
+        $plain = trim($plain);
+        foreach (self::stateInfo() as $uf => $info) {
+            $name = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', mb_strtolower($info['name'], 'UTF-8'));
+            if ($plain === strtolower((string) $name)) { return $uf; }
+        }
+        return ['federal district' => 'DF', 'brasilia' => 'DF'][$plain] ?? '';
+    }
+
+    private static function stateInfo(): array
+    {
+        return [
+            'AC' => ['name' => 'Acre', 'region' => 'Norte'], 'AL' => ['name' => 'Alagoas', 'region' => 'Nordeste'],
+            'AP' => ['name' => 'Amapá', 'region' => 'Norte'], 'AM' => ['name' => 'Amazonas', 'region' => 'Norte'],
+            'BA' => ['name' => 'Bahia', 'region' => 'Nordeste'], 'CE' => ['name' => 'Ceará', 'region' => 'Nordeste'],
+            'DF' => ['name' => 'Distrito Federal', 'region' => 'Centro-Oeste'], 'ES' => ['name' => 'Espírito Santo', 'region' => 'Sudeste'],
+            'GO' => ['name' => 'Goiás', 'region' => 'Centro-Oeste'], 'MA' => ['name' => 'Maranhão', 'region' => 'Nordeste'],
+            'MT' => ['name' => 'Mato Grosso', 'region' => 'Centro-Oeste'], 'MS' => ['name' => 'Mato Grosso do Sul', 'region' => 'Centro-Oeste'],
+            'MG' => ['name' => 'Minas Gerais', 'region' => 'Sudeste'], 'PA' => ['name' => 'Pará', 'region' => 'Norte'],
+            'PB' => ['name' => 'Paraíba', 'region' => 'Nordeste'], 'PR' => ['name' => 'Paraná', 'region' => 'Sul'],
+            'PE' => ['name' => 'Pernambuco', 'region' => 'Nordeste'], 'PI' => ['name' => 'Piauí', 'region' => 'Nordeste'],
+            'RJ' => ['name' => 'Rio de Janeiro', 'region' => 'Sudeste'], 'RN' => ['name' => 'Rio Grande do Norte', 'region' => 'Nordeste'],
+            'RS' => ['name' => 'Rio Grande do Sul', 'region' => 'Sul'], 'RO' => ['name' => 'Rondônia', 'region' => 'Norte'],
+            'RR' => ['name' => 'Roraima', 'region' => 'Norte'], 'SC' => ['name' => 'Santa Catarina', 'region' => 'Sul'],
+            'SP' => ['name' => 'São Paulo', 'region' => 'Sudeste'], 'SE' => ['name' => 'Sergipe', 'region' => 'Nordeste'],
+            'TO' => ['name' => 'Tocantins', 'region' => 'Norte'],
+        ];
     }
 
     public static function eventDetails(array $row, bool $showIp = true): array
