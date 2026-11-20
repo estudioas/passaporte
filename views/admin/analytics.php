@@ -14,7 +14,7 @@
 <article><span>Cidade não informada</span><strong><?= $n($report['unknown_city']) ?></strong><small>visualizações sem localização municipal</small></article>
 </section>
 <?php $regional = $report['regional_votes']; $topState = $regional['top_state']; $topCity = $regional['top_city']; ?>
-<section class="admin-panel regional-votes-panel" data-regional-map>
+<section class="admin-panel regional-votes-panel" id="mapa-votos" data-regional-map>
 <div class="panel-heading"><div><span>Auditoria geográfica dos votos</span><h2>Origem e liderança por região</h2></div><small>Somente votos válidos do Brasil · <?= $h($range['start']) ?> a <?= $h($range['end']) ?></small></div>
 <p class="analytics-note">A localização corresponde à UF e à cidade informadas pela infraestrutura de rede no momento da confirmação. O mapa não expõe endereços IP e não altera a apuração.</p>
 <div class="regional-summary">
