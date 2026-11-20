@@ -36,6 +36,6 @@
 </section>
 
 <section class="passport-results-section campaign-trust">
- <div><span class="passport-eyebrow">Participação responsável</span><h2>Votação protegida contra manipulação.</h2><p>A participação é permitida somente a pessoas no Brasil. Automação, compra de votos e outras formas de manipulação são proibidas e podem levar à invalidação após auditoria.</p></div>
+ <div><span class="passport-eyebrow">Participação responsável</span><h2>Votação protegida e auditada.</h2><p>A participação é permitida somente a pessoas no Brasil. Automação, compra de votos e outras formas de manipulação são proibidas e podem levar à invalidação após auditoria.</p></div>
  <div class="campaign-trust-links"><h3>Transparência e privacidade</h3><p>Registramos apenas os sinais necessários para validar a participação, investigar fraude e preservar a integridade da campanha, conforme o aviso de privacidade.</p><a href="/regulamento/profissionais">Regulamento da campanha</a><a href="/privacidade">Privacidade e tratamento de dados</a><a href="/auditoria">Como a votação é auditada</a></div>
 </section>
