@@ -101,6 +101,31 @@ final class AdminController
         unset($_SESSION['admin_message'], $_SESSION['admin_error']);
     }
 
+    public function finalistDiagnostics(): never
+    {
+        Auth::requirePermission('finalists');
+        try {
+            Schema::ensureFinalistImages();
+            $pdo = Database::connection();
+            $table = $pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'finalist_images'")->fetchColumn();
+            $columns = $pdo->query('SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = "finalist_images"')->fetchColumn();
+            $folder = dirname(__DIR__, 2) . '/storage/finalists';
+            Response::json([
+                'ok' => (int) $table === 1 && (int) $columns >= 13,
+                'table' => (int) $table === 1,
+                'columns' => (int) $columns,
+                'storage_exists' => is_dir($folder),
+                'storage_writable' => is_dir($folder) && is_writable($folder),
+            ]);
+        } catch (Throwable $e) {
+            Response::json([
+                'ok' => false,
+                'error_type' => get_class($e),
+                'error' => mb_substr($e->getMessage(), 0, 500),
+            ], 500);
+        }
+    }
+
     public function saveFinalist(): never
     {
         $user = Auth::requirePermission('finalists');

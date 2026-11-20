@@ -51,6 +51,7 @@ $routes = [
         '/admin/analytics/online' => [$admin, 'online'],
         '/admin' => [$admin, 'dashboard'],
         '/admin/finalistas' => [$admin, 'finalists'],
+        '/admin/finalistas/diagnostico' => [$admin, 'finalistDiagnostics'],
         '/admin/auditoria' => [$admin, 'audit'],
         '/admin/auditoria/exportar' => [$admin, 'exportAudit'],
         '/admin/configuracoes' => [$admin, 'settings'],
