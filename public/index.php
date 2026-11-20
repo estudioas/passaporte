@@ -20,7 +20,7 @@ $path = $path === '/' ? '/' : rtrim($path, '/');
 $public = new PublicController();
 $admin = new AdminController();
 
-if (!in_array($path, ['/api/analytics/presence', '/admin/analytics/online'], true)) {
+if (!in_array($path, ['/api/analytics/presence', '/admin/analytics/online'], true) && !str_starts_with($path, '/media/finalistas/')) {
 Audit::log(
     'http.request',
     [
@@ -65,6 +65,10 @@ $routes = [
         '/admin/logout' => [$admin, 'logout'],
         '/admin/finalistas/salvar' => [$admin, 'saveFinalist'],
         '/admin/finalistas/desativar' => [$admin, 'disableFinalist'],
+        '/admin/finalistas/imagens/enviar' => [$admin, 'uploadFinalistImages'],
+        '/admin/finalistas/imagens/capa' => [$admin, 'setFinalistImageCover'],
+        '/admin/finalistas/imagens/mover' => [$admin, 'moveFinalistImage'],
+        '/admin/finalistas/imagens/excluir' => [$admin, 'deleteFinalistImage'],
         '/admin/auditoria/voto' => [$admin, 'updateVote'],
         '/admin/configuracoes' => [$admin, 'saveSettings'],
         '/admin/permissoes' => [$admin, 'savePermissions'],
@@ -72,6 +76,9 @@ $routes = [
     ],
 ];
 
+if ($method === 'GET' && preg_match('#^/media/finalistas/([1-9][0-9]*)$#', $path, $matches)) {
+    $public->finalistImage((int) $matches[1]);
+}
 
 $handler = $routes[$method][$path] ?? null;
 if (is_callable($handler)) {

@@ -12,10 +12,12 @@ use App\Core\Csrf;
 use App\Core\Database;
 use App\Core\Privacy;
 use App\Core\Response;
+use App\Core\Schema;
 use App\Core\Security;
 use App\Core\Settings;
 use App\Core\View;
 use RuntimeException;
+use Throwable;
 
 final class AdminController
 {
@@ -84,8 +86,18 @@ final class AdminController
     public function finalists(): void
     {
         $user = Auth::requirePermission('finalists');
+        Schema::ensureFinalistImages();
         $rows = Database::connection()->query('SELECT * FROM finalists ORDER BY active DESC, sort_order ASC, id ASC')->fetchAll();
-        View::render('admin/finalists', ['title' => 'Finalistas', 'user' => $user, 'finalists' => $rows, 'message' => $_SESSION['admin_message'] ?? null, 'error' => $_SESSION['admin_error'] ?? null], 'admin/layout');
+        $images = Database::connection()->query('SELECT * FROM finalist_images ORDER BY finalist_id ASC, is_cover DESC, sort_order ASC, id ASC')->fetchAll();
+        $byFinalist = [];
+        foreach ($images as $image) {
+            $byFinalist[(int) $image['finalist_id']][] = $image;
+        }
+        foreach ($rows as &$row) {
+            $row['images'] = $byFinalist[(int) $row['id']] ?? [];
+        }
+        unset($row);
+        View::render('admin/finalists', ['title' => 'Finalistas', 'user' => $user, 'finalists' => $rows, 'maxImages' => max(1, (int) Config::get('security.max_finalist_images', 10)), 'message' => $_SESSION['admin_message'] ?? null, 'error' => $_SESSION['admin_error'] ?? null], 'admin/layout');
         unset($_SESSION['admin_message'], $_SESSION['admin_error']);
     }
 
@@ -110,7 +122,7 @@ final class AdminController
             $count = $pdo->prepare('SELECT COUNT(*) FROM finalists WHERE active = 1 AND id <> ?');
             $count->execute([$id]);
             if ((int) $count->fetchColumn() >= 3) {
-                $_SESSION['admin_error'] = 'Desative um finalista antes de ativar outro. A home aceita exatamente três.';
+                $_SESSION['admin_error'] = 'Desative um finalista antes de ativar outro. A página de votação aceita exatamente três.';
                 Response::redirect('/admin/finalistas');
             }
         }
@@ -139,8 +151,256 @@ final class AdminController
         $id = (int) ($_POST['id'] ?? 0);
         Database::connection()->prepare('UPDATE finalists SET active = 0, updated_at = NOW() WHERE id = ?')->execute([$id]);
         Audit::log('admin.finalist_disabled', ['finalist_id' => $id], 'admin', (int) $user['id']);
-        $_SESSION['admin_message'] = 'Finalista removido da home sem apagar o histórico.';
+        $_SESSION['admin_message'] = 'Finalista arquivado sem apagar fotos, votos ou histórico.';
         Response::redirect('/admin/finalistas');
+    }
+
+    public function uploadFinalistImages(): never
+    {
+        $user = Auth::requirePermission('finalists');
+        if (!Csrf::verify($_POST['_csrf'] ?? null)) {
+            $_SESSION['admin_error'] = 'Sessão expirada.';
+            Response::redirect('/admin/finalistas');
+        }
+        Schema::ensureFinalistImages();
+        $finalistId = (int) ($_POST['finalist_id'] ?? 0);
+        $pdo = Database::connection();
+        $stmt = $pdo->prepare('SELECT id, project_title FROM finalists WHERE id = ? LIMIT 1');
+        $stmt->execute([$finalistId]);
+        $finalist = $stmt->fetch();
+        if (!$finalist) {
+            $_SESSION['admin_error'] = 'Finalista não encontrado.';
+            Response::redirect('/admin/finalistas');
+        }
+
+        $files = $this->normalizeImageUploads($_FILES['images'] ?? []);
+        $maxImages = max(1, (int) Config::get('security.max_finalist_images', 10));
+        $current = $pdo->prepare('SELECT COUNT(*) FROM finalist_images WHERE finalist_id = ?');
+        $current->execute([$finalistId]);
+        if (!$files || (int) $current->fetchColumn() + count($files) > $maxImages) {
+            $_SESSION['admin_error'] = 'Selecione imagens válidas sem ultrapassar o limite de ' . $maxImages . ' fotos por finalista.';
+            Response::redirect('/admin/finalistas#finalista-' . $finalistId);
+        }
+
+        $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        $maxBytes = max(1048576, (int) Config::get('security.max_finalist_image_bytes', 8388608));
+        $validated = [];
+        try {
+            foreach ($files as $file) {
+                if ((int) $file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file((string) $file['tmp_name'])) {
+                    throw new RuntimeException('Uma das fotos não foi recebida corretamente.');
+                }
+                if ((int) $file['size'] < 1 || (int) $file['size'] > $maxBytes) {
+                    throw new RuntimeException('Cada foto deve ter no máximo ' . number_format($maxBytes / 1048576, 0, ',', '.') . ' MB.');
+                }
+                $mime = (new \finfo(FILEINFO_MIME_TYPE))->file((string) $file['tmp_name']);
+                $dimensions = @getimagesize((string) $file['tmp_name']);
+                if (!isset($allowed[$mime]) || !is_array($dimensions) || ($dimensions['mime'] ?? '') !== $mime) {
+                    throw new RuntimeException('Envie apenas imagens JPG, PNG ou WebP válidas.');
+                }
+                $width = (int) ($dimensions[0] ?? 0);
+                $height = (int) ($dimensions[1] ?? 0);
+                if ($width < 600 || $height < 600 || $width > 10000 || $height > 10000) {
+                    throw new RuntimeException('Cada foto deve ter entre 600 e 10.000 pixels em cada dimensão.');
+                }
+                $validated[] = [
+                    'tmp_name' => (string) $file['tmp_name'],
+                    'original_name' => mb_substr(basename((string) $file['name']), 0, 255),
+                    'mime' => $mime,
+                    'extension' => $allowed[$mime],
+                    'size' => (int) $file['size'],
+                    'width' => $width,
+                    'height' => $height,
+                    'sha256' => hash_file('sha256', (string) $file['tmp_name']),
+                ];
+            }
+        } catch (RuntimeException $e) {
+            $_SESSION['admin_error'] = $e->getMessage();
+            Response::redirect('/admin/finalistas#finalista-' . $finalistId);
+        }
+
+        $folder = dirname(__DIR__, 2) . '/storage/finalists/' . $finalistId;
+        if (!is_dir($folder) && !mkdir($folder, 0700, true) && !is_dir($folder)) {
+            $_SESSION['admin_error'] = 'Não foi possível preparar o armazenamento das fotos.';
+            Response::redirect('/admin/finalistas#finalista-' . $finalistId);
+        }
+        $storedPaths = [];
+        try {
+            Database::transaction(function ($pdo) use ($validated, $folder, $finalist, $finalistId, $user, &$storedPaths): void {
+                $next = $pdo->prepare('SELECT COALESCE(MAX(sort_order), 0) FROM finalist_images WHERE finalist_id = ?');
+                $next->execute([$finalistId]);
+                $sort = (int) $next->fetchColumn();
+                $cover = $pdo->prepare('SELECT COUNT(*) FROM finalist_images WHERE finalist_id = ? AND is_cover = 1');
+                $cover->execute([$finalistId]);
+                $hasCover = (int) $cover->fetchColumn() > 0;
+                $insert = $pdo->prepare(
+                    'INSERT INTO finalist_images (finalist_id, original_name, stored_name, mime_type, size_bytes, width_px, height_px, sha256, alt_text, sort_order, is_cover, created_at) '
+                    . 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())'
+                );
+                $imageIds = [];
+                foreach ($validated as $index => $file) {
+                    $storedName = bin2hex(random_bytes(16)) . '.' . $file['extension'];
+                    $target = $folder . '/' . $storedName;
+                    if (!move_uploaded_file($file['tmp_name'], $target)) {
+                        throw new RuntimeException('Não foi possível armazenar uma das fotos.');
+                    }
+                    chmod($target, 0600);
+                    $storedPaths[] = $target;
+                    $isCover = !$hasCover && $index === 0 ? 1 : 0;
+                    $sort++;
+                    $insert->execute([
+                        $finalistId,
+                        $file['original_name'],
+                        $storedName,
+                        $file['mime'],
+                        $file['size'],
+                        $file['width'],
+                        $file['height'],
+                        $file['sha256'],
+                        mb_substr('Projeto ' . (string) $finalist['project_title'] . ' — foto ' . $sort, 0, 255),
+                        $sort,
+                        $isCover,
+                    ]);
+                    $imageIds[] = (int) $pdo->lastInsertId();
+                }
+                Audit::log('admin.finalist_images_uploaded', ['finalist_id' => $finalistId, 'image_ids' => $imageIds, 'count' => count($imageIds)], 'admin', (int) $user['id'], 0, $pdo);
+            });
+        } catch (Throwable $e) {
+            foreach ($storedPaths as $storedPath) {
+                if (is_file($storedPath)) {
+                    unlink($storedPath);
+                }
+            }
+            error_log((string) $e);
+            $_SESSION['admin_error'] = $e instanceof RuntimeException ? $e->getMessage() : 'Não foi possível salvar as fotos.';
+            Response::redirect('/admin/finalistas#finalista-' . $finalistId);
+        }
+        $_SESSION['admin_message'] = count($validated) === 1 ? 'Foto adicionada ao carrossel.' : count($validated) . ' fotos adicionadas ao carrossel.';
+        Response::redirect('/admin/finalistas#finalista-' . $finalistId);
+    }
+
+    public function setFinalistImageCover(): never
+    {
+        $user = Auth::requirePermission('finalists');
+        if (!Csrf::verify($_POST['_csrf'] ?? null)) {
+            Response::redirect('/admin/finalistas');
+        }
+        Schema::ensureFinalistImages();
+        $imageId = (int) ($_POST['image_id'] ?? 0);
+        $image = $this->finalistImageRow($imageId);
+        if (!$image) {
+            $_SESSION['admin_error'] = 'Foto não encontrada.';
+            Response::redirect('/admin/finalistas');
+        }
+        Database::transaction(function ($pdo) use ($imageId, $image, $user): void {
+            $current = $pdo->prepare('SELECT id, sort_order FROM finalist_images WHERE finalist_id = ? AND is_cover = 1 LIMIT 1 FOR UPDATE');
+            $current->execute([(int) $image['finalist_id']]);
+            $currentCover = $current->fetch();
+            if ($currentCover && (int) $currentCover['id'] !== $imageId) {
+                $pdo->prepare('UPDATE finalist_images SET sort_order = ? WHERE id = ?')->execute([(int) $currentCover['sort_order'], $imageId]);
+                $pdo->prepare('UPDATE finalist_images SET sort_order = ? WHERE id = ?')->execute([(int) $image['sort_order'], (int) $currentCover['id']]);
+            }
+            $pdo->prepare('UPDATE finalist_images SET is_cover = 0 WHERE finalist_id = ?')->execute([(int) $image['finalist_id']]);
+            $pdo->prepare('UPDATE finalist_images SET is_cover = 1 WHERE id = ? AND finalist_id = ?')->execute([$imageId, (int) $image['finalist_id']]);
+            Audit::log('admin.finalist_image_cover_set', ['finalist_id' => (int) $image['finalist_id'], 'image_id' => $imageId], 'admin', (int) $user['id'], 0, $pdo);
+        });
+        $_SESSION['admin_message'] = 'Capa do carrossel atualizada.';
+        Response::redirect('/admin/finalistas#finalista-' . (int) $image['finalist_id']);
+    }
+
+    public function moveFinalistImage(): never
+    {
+        $user = Auth::requirePermission('finalists');
+        if (!Csrf::verify($_POST['_csrf'] ?? null)) {
+            Response::redirect('/admin/finalistas');
+        }
+        Schema::ensureFinalistImages();
+        $imageId = (int) ($_POST['image_id'] ?? 0);
+        $direction = ($_POST['direction'] ?? '') === 'up' ? -1 : 1;
+        $image = $this->finalistImageRow($imageId);
+        if (!$image) {
+            $_SESSION['admin_error'] = 'Foto não encontrada.';
+            Response::redirect('/admin/finalistas');
+        }
+        $stmt = Database::connection()->prepare('SELECT id, sort_order FROM finalist_images WHERE finalist_id = ? ORDER BY sort_order ASC, id ASC');
+        $stmt->execute([(int) $image['finalist_id']]);
+        $ordered = $stmt->fetchAll();
+        $position = array_search($imageId, array_map(static fn (array $row): int => (int) $row['id'], $ordered), true);
+        $swapPosition = $position === false ? false : $position + $direction;
+        if ($position !== false && isset($ordered[$swapPosition])) {
+            $other = $ordered[$swapPosition];
+            Database::transaction(function ($pdo) use ($image, $other, $user): void {
+                $pdo->prepare('UPDATE finalist_images SET sort_order = ? WHERE id = ?')->execute([(int) $other['sort_order'], (int) $image['id']]);
+                $pdo->prepare('UPDATE finalist_images SET sort_order = ? WHERE id = ?')->execute([(int) $image['sort_order'], (int) $other['id']]);
+                Audit::log('admin.finalist_image_moved', ['finalist_id' => (int) $image['finalist_id'], 'image_id' => (int) $image['id']], 'admin', (int) $user['id'], 0, $pdo);
+            });
+        }
+        Response::redirect('/admin/finalistas#finalista-' . (int) $image['finalist_id']);
+    }
+
+    public function deleteFinalistImage(): never
+    {
+        $user = Auth::requirePermission('finalists');
+        if (!Csrf::verify($_POST['_csrf'] ?? null)) {
+            Response::redirect('/admin/finalistas');
+        }
+        Schema::ensureFinalistImages();
+        $imageId = (int) ($_POST['image_id'] ?? 0);
+        $image = $this->finalistImageRow($imageId);
+        if (!$image) {
+            $_SESSION['admin_error'] = 'Foto não encontrada.';
+            Response::redirect('/admin/finalistas');
+        }
+        Database::transaction(function ($pdo) use ($imageId, $image, $user): void {
+            $pdo->prepare('DELETE FROM finalist_images WHERE id = ? AND finalist_id = ?')->execute([$imageId, (int) $image['finalist_id']]);
+            if ((int) $image['is_cover'] === 1) {
+                $next = $pdo->prepare('SELECT id FROM finalist_images WHERE finalist_id = ? ORDER BY sort_order ASC, id ASC LIMIT 1');
+                $next->execute([(int) $image['finalist_id']]);
+                $nextId = $next->fetchColumn();
+                if ($nextId !== false) {
+                    $pdo->prepare('UPDATE finalist_images SET is_cover = 1 WHERE id = ?')->execute([(int) $nextId]);
+                }
+            }
+            Audit::log('admin.finalist_image_deleted', ['finalist_id' => (int) $image['finalist_id'], 'image_id' => $imageId, 'sha256' => (string) $image['sha256']], 'admin', (int) $user['id'], 0, $pdo);
+        });
+        $path = dirname(__DIR__, 2) . '/storage/finalists/' . (int) $image['finalist_id'] . '/' . basename((string) $image['stored_name']);
+        if (is_file($path)) {
+            unlink($path);
+        }
+        $_SESSION['admin_message'] = 'Foto removida permanentemente do carrossel.';
+        Response::redirect('/admin/finalistas#finalista-' . (int) $image['finalist_id']);
+    }
+
+    private function finalistImageRow(int $imageId): array|false
+    {
+        $stmt = Database::connection()->prepare('SELECT * FROM finalist_images WHERE id = ? LIMIT 1');
+        $stmt->execute([$imageId]);
+        return $stmt->fetch();
+    }
+
+    private function normalizeImageUploads(array $files): array
+    {
+        if (!isset($files['name'])) {
+            return [];
+        }
+        if (!is_array($files['name'])) {
+            return (int) ($files['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE ? [] : [$files];
+        }
+        $normalized = [];
+        foreach ($files['name'] as $index => $name) {
+            $error = (int) ($files['error'][$index] ?? UPLOAD_ERR_NO_FILE);
+            if ($error === UPLOAD_ERR_NO_FILE) {
+                continue;
+            }
+            $normalized[] = [
+                'name' => $name,
+                'type' => $files['type'][$index] ?? '',
+                'tmp_name' => $files['tmp_name'][$index] ?? '',
+                'error' => $error,
+                'size' => $files['size'][$index] ?? 0,
+            ];
+        }
+        return $normalized;
     }
 
     public function analytics(): void

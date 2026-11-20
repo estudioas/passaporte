@@ -17,6 +17,23 @@
     navToggle.setAttribute('aria-expanded', String(open));
   });
 
+  document.querySelectorAll('[data-carousel]').forEach((carousel) => {
+    const slides = [...carousel.querySelectorAll('[data-carousel-slide]')];
+    const current = carousel.querySelector('[data-carousel-current]');
+    let index = 0;
+    const show = (next) => {
+      if (!slides.length) return;
+      index = (next + slides.length) % slides.length;
+      slides.forEach((slide, slideIndex) => {
+        slide.hidden = slideIndex !== index;
+      });
+      if (current) current.textContent = String(index + 1);
+    };
+    carousel.querySelector('[data-carousel-prev]')?.addEventListener('click', () => show(index - 1));
+    carousel.querySelector('[data-carousel-next]')?.addEventListener('click', () => show(index + 1));
+    show(0);
+  });
+
   const analyticsView = document.body.dataset.analyticsView;
   if (analyticsView) {
     let pending = false;

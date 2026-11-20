@@ -5,6 +5,10 @@
 - [ ] A home informa inscrições encerradas, próximos passos e datas oficiais.
 - [ ] A página de votação mostra exatamente três finalistas.
 - [ ] A ordem dos finalistas muda entre visitas sem mudar os dados de cada projeto.
+- [ ] Cada carrossel mantém as fotos do mesmo finalista em todas as posições aleatórias.
+- [ ] Selecionar o mesmo finalista em posições diferentes envia sempre o mesmo ID permanente.
+- [ ] Capa, ordenação e exclusão de fotos funcionam no painel sem alterar a identidade do finalista.
+- [ ] JPG, PNG e WebP válidos são aceitos; arquivo falso, grande demais ou com dimensões inválidas é rejeitado.
 - [ ] É possível trocar a escolha antes de confirmar.
 - [ ] Fechar a janela não registra voto.
 - [ ] CAPTCHA incorreto não registra voto.

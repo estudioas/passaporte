@@ -18,6 +18,8 @@ Não são registrados coordenadas precisas, impressão digital invasiva, histór
 
 O banco guarda em campo criptografado: nome, registro profissional, Instagram, cidade/UF, e-mail, WhatsApp, empresa, revenda, cidade da revenda, vendedor, nome do ambiente e crédito fotográfico. O e-mail também gera um hash para detecção de duplicidade sem busca em texto claro. Fotos e nota fiscal ficam em `storage/uploads`, fora do diretório público, com hash de integridade.
 
+As fotos publicadas dos finalistas ficam em `storage/finalists`, também fora do diretório público. O sistema registra nome técnico, tipo MIME, tamanho, dimensões, ordem, indicação de capa e SHA-256. Essas imagens são material público da campanha; exclusões pelo painel são permanentes e geram evento de auditoria.
+
 Retenção proposta:
 
 - inscrições não finalistas: 12 meses após o encerramento;

@@ -107,3 +107,30 @@
 .vote-terms input{width:18px;height:18px;margin:2px 0 0;accent-color:#8e281f}
 .vote-terms a{color:#8e281f;text-underline-offset:3px}
 @media(max-width:900px){.campaign-next-phase .passport-hero-photo{min-height:460px}.campaign-trust-links{margin-top:8px}}
+
+/* Carrosséis dos finalistas: identidade estável e posição pública independente. */
+.candidate-card{--candidate-accent:#8e281f}
+.candidate-card.selected{border-color:var(--candidate-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--candidate-accent) 18%,transparent),0 18px 50px #34281d18}
+.candidate-carousel{position:relative;background:#ded6ca;overflow:hidden}
+.candidate-slides{height:390px}
+.candidate-image{height:100%;margin:0}
+.candidate-image[hidden]{display:none}
+.candidate-image img{width:100%;height:100%;object-fit:cover}
+.candidate-identity{position:absolute;top:16px;left:16px;padding:8px 11px;border-radius:6px;background:var(--candidate-accent);color:#fff;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.candidate-carousel-controls{position:absolute;right:14px;bottom:14px;display:flex;align-items:center;gap:8px;padding:5px;background:#211d1bd9;color:#fff;border-radius:999px}
+.candidate-carousel-controls button{width:38px;height:38px;border:0;border-radius:50%;background:#fff;color:#211d1b;font-size:25px;line-height:1}
+.candidate-carousel-controls span{min-width:44px;text-align:center;font-size:12px}.candidate-carousel-controls b{font-weight:700}
+.candidate-select{display:block}.candidate-select-label{display:block;margin-top:14px;color:var(--candidate-accent);font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.candidate-card.selected .candidate-radio{background:var(--candidate-accent);border-color:var(--candidate-accent)}
+@media(max-width:900px){.candidate-slides{height:520px}}
+@media(max-width:560px){.candidate-slides{height:390px}}
+
+/* Gestão dos carrosséis no painel. */
+.finalist-editor-grid{display:grid;grid-template-columns:minmax(320px,.8fr) minmax(420px,1.2fr);gap:32px;padding:24px 0 32px}
+.finalist-gallery-admin{min-width:0;border-left:1px solid var(--line);padding-left:32px}
+.gallery-admin-heading{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:16px}.gallery-admin-heading span{display:block;color:var(--wine);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.gallery-admin-heading h3{margin:4px 0 0;font-size:24px}.gallery-admin-heading small{color:var(--muted)}
+.gallery-upload-form{display:grid;grid-template-columns:1fr auto;align-items:end;gap:12px;padding:16px;background:#f5f0e8;border:1px solid var(--line);border-radius:6px}.gallery-upload-form label{display:grid;gap:7px;font-size:14px;font-weight:700}.gallery-upload-form label span{font-size:12px;font-weight:400;color:var(--muted)}.gallery-upload-form input[type=file]{max-width:100%;font-size:13px}.gallery-upload-form button:disabled{opacity:.45;cursor:not-allowed}
+.gallery-empty{margin-top:16px;padding:22px;border:1px dashed #cbbfb3;color:var(--muted);text-align:center}
+.gallery-admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px}.gallery-admin-item{min-width:0;border:1px solid var(--line);background:#fff;border-radius:6px;overflow:hidden}.gallery-admin-item.is-cover{border-color:var(--wine)}.gallery-admin-preview{position:relative;height:190px;background:#e4ddd3}.gallery-admin-preview img{width:100%;height:100%;object-fit:cover}.gallery-admin-preview span{position:absolute;top:10px;left:10px;padding:5px 8px;background:var(--wine);color:#fff;border-radius:4px;font-size:11px;font-weight:700;text-transform:uppercase}.gallery-admin-meta{display:grid;gap:2px;padding:12px}.gallery-admin-meta small{color:var(--muted);font-size:11px}.gallery-admin-actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:0 12px 12px}.gallery-admin-actions form{margin:0}.gallery-admin-actions button{min-height:34px;padding:6px 9px;border:1px solid #cfc5bd;background:#faf8f4;color:#3c332d;border-radius:4px;font-size:11px}.gallery-admin-actions button:hover:not(:disabled){border-color:var(--wine);color:var(--wine)}.gallery-admin-actions button:disabled{opacity:.35;cursor:not-allowed}.gallery-admin-actions .danger{color:#9b2b2b}
+@media(max-width:1100px){.finalist-editor-grid{grid-template-columns:1fr}.finalist-gallery-admin{border-left:0;border-top:1px solid var(--line);padding:28px 0 0}}
+@media(max-width:650px){.gallery-upload-form{grid-template-columns:1fr}.gallery-admin-grid{grid-template-columns:1fr}.gallery-admin-preview{height:230px}}

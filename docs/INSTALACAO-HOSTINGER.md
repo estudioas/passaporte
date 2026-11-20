@@ -15,6 +15,7 @@ Envie a pasta completa para `passaporte-app`, por Gerenciador de Arquivos, SFTP 
 
 - `public/index.php` é acessível pelo subdomínio;
 - `storage/uploads` existe e recebe permissão `700` ou, se o ambiente exigir, `750`;
+- `storage/finalists` existe e recebe permissão `700` ou, se o ambiente exigir, `750`;
 - `config/app.php` recebe permissão `600` ou `640`;
 - a raiz do subdomínio é `passaporte-app/public`, ou a raiz do repositório quando usada a implantação Git protegida.
 
@@ -68,7 +69,7 @@ Selecione PHP 8.1+ e confirme as extensões PDO MySQL, OpenSSL, Fileinfo e Mbstr
 
 - `upload_max_filesize` ≥ 10 MB;
 - `post_max_size` ≥ 55 MB;
-- `max_file_uploads` ≥ 8;
+- `max_file_uploads` ≥ 10;
 - `display_errors` desligado.
 
 ## 8. Configurar a campanha
@@ -77,13 +78,14 @@ No painel:
 
 1. substitua os três finalistas demonstrativos;
 2. valide cada embed do Instagram;
-3. mantenha exatamente três finalistas ativos;
-4. decida se a prévia pública do ranking ficará ligada;
-5. confirme que votação e inscrições não estão fechadas manualmente.
+3. envie, ordene e escolha a capa do carrossel de cada finalista;
+4. mantenha exatamente três finalistas ativos;
+5. decida se a prévia pública do ranking ficará ligada;
+6. confirme que a votação não está fechada manualmente.
 
 ## 9. Backups e cron
 
-Ative backup diário do banco e dos diretórios `storage/uploads` e `config`. Mantenha ao menos uma cópia fora da conta de hospedagem. O site não exige cron para funcionar. Opcionalmente, rode semanalmente:
+Ative backup diário do banco e dos diretórios `storage/uploads`, `storage/finalists` e `config`. Mantenha ao menos uma cópia fora da conta de hospedagem. O site não exige cron para funcionar. Opcionalmente, rode semanalmente:
 
 `php bin/verify-audit.php`
 

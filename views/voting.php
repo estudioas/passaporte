@@ -8,6 +8,7 @@ $defaultImages = [
     '/assets/img/finalista-ambiente-02-v2.jpg',
     '/assets/img/finalista-ambiente-03-v2.jpg',
 ];
+$identityColors = ['#8e281f', '#315f5a', '#66507a'];
 ?>
 <section id="top" class="passport-hero">
     <div class="blueprint" aria-hidden="true"></div>
@@ -35,11 +36,32 @@ $defaultImages = [
 
     <div class="candidate-grid" data-finalist-grid>
         <?php foreach ($finalists as $index => $finalist): ?>
-            <?php $image = !empty($finalist['fallback_image_url']) ? (string) $finalist['fallback_image_url'] : $defaultImages[$index % 3]; ?>
-            <article class="candidate-card" data-finalist-id="<?= (int) $finalist['id'] ?>">
+            <?php
+                $identityNumber = (int) sprintf('%u', crc32((string) $finalist['slug']));
+                $accent = $identityColors[$identityNumber % count($identityColors)];
+                $fallback = !empty($finalist['fallback_image_url'])
+                    ? (string) $finalist['fallback_image_url']
+                    : $defaultImages[$identityNumber % count($defaultImages)];
+                $projectImages = $finalist['images'] ?? [];
+            ?>
+            <article class="candidate-card" data-finalist-id="<?= (int) $finalist['id'] ?>" data-finalist-key="<?= $h($finalist['slug']) ?>" style="--candidate-accent:<?= $h($accent) ?>">
+                <div class="candidate-carousel" data-carousel aria-label="Fotos do projeto <?= $h($finalist['project_title']) ?>">
+                    <div class="candidate-slides">
+                    <?php if ($projectImages): ?>
+                        <?php foreach ($projectImages as $imageIndex => $image): ?>
+                            <figure class="candidate-image" data-carousel-slide <?= $imageIndex === 0 ? '' : 'hidden' ?>><img src="/media/finalistas/<?= (int) $image['id'] ?>" alt="<?= $h($image['alt_text']) ?>" width="<?= (int) $image['width_px'] ?>" height="<?= (int) $image['height_px'] ?>" <?= $imageIndex === 0 ? '' : 'loading="lazy"' ?>></figure>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <figure class="candidate-image" data-carousel-slide><img src="<?= $h($fallback) ?>" alt="Projeto <?= $h($finalist['project_title']) ?>" loading="lazy"></figure>
+                    <?php endif; ?>
+                    </div>
+                    <span class="candidate-identity">Projeto finalista</span>
+                    <?php if (count($projectImages) > 1): ?>
+                    <div class="candidate-carousel-controls"><button type="button" data-carousel-prev aria-label="Foto anterior">‹</button><span><b data-carousel-current>1</b>/<?= count($projectImages) ?></span><button type="button" data-carousel-next aria-label="Próxima foto">›</button></div>
+                    <?php endif; ?>
+                </div>
                 <button class="candidate-select" type="button" data-vote-choice="<?= (int) $finalist['id'] ?>" data-vote-label="<?= $h($finalist['project_title']) ?>" data-vote-social="<?= $h($finalist['instagram_url']) ?>" aria-pressed="false" <?= $votingOpen ? '' : 'disabled' ?>>
-                    <div class="candidate-image"><img src="<?= $h($image) ?>" alt="Projeto <?= $h($finalist['project_title']) ?>" loading="lazy"><span>0<?= $index + 1 ?></span></div>
-                    <div class="candidate-meta"><div><small>PROJETO</small><h3><?= $h($finalist['project_title']) ?></h3><p><?= $h($finalist['participant_name']) ?></p></div><span class="candidate-radio" aria-hidden="true">✓</span></div>
+                    <div class="candidate-meta"><div><small>PROJETO</small><h3><?= $h($finalist['project_title']) ?></h3><p><?= $h($finalist['participant_name']) ?></p><strong class="candidate-select-label">Selecionar este projeto</strong></div><span class="candidate-radio" aria-hidden="true">✓</span></div>
                 </button>
             </article>
         <?php endforeach; ?>

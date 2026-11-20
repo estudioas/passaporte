@@ -22,11 +22,12 @@ $check('HTTPS na URL base', str_starts_with((string) Config::get('app.base_url')
 $secret = (string) Config::get('app.secret');
 $check('Segredo configurado', strlen($secret) >= 64 && !str_contains($secret, 'TROQUE-POR'));
 $check('Uploads graváveis', is_dir(dirname(__DIR__) . '/storage/uploads') && is_writable(dirname(__DIR__) . '/storage/uploads'));
+$check('Fotos de finalistas graváveis', is_dir(dirname(__DIR__) . '/storage/finalists') && is_writable(dirname(__DIR__) . '/storage/finalists'));
 
 try {
     $pdo = Database::connection();
     $check('Conexão com banco', (int) $pdo->query('SELECT 1')->fetchColumn() === 1);
-    $tables = ['admin_users','settings','finalists','audit_chain_state','audit_events','votes','auth_attempts','registrations','registration_files'];
+    $tables = ['admin_users','settings','finalists','finalist_images','audit_chain_state','audit_events','votes','auth_attempts','registrations','registration_files'];
     foreach ($tables as $table) {
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?');
         $stmt->execute([$table]);

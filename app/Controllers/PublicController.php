@@ -14,6 +14,7 @@ use App\Core\Database;
 use App\Core\Geo;
 use App\Core\Privacy;
 use App\Core\Response;
+use App\Core\Schema;
 use App\Core\Security;
 use App\Core\Settings;
 use App\Core\View;
@@ -60,8 +61,23 @@ final class PublicController
     {
         if (!$this->pageAvailable('voting')) return;
         $this->logPageView('voting');
+        Schema::ensureFinalistImages();
         $pdo = Database::connection();
         $finalists = $pdo->query('SELECT id, slug, participant_name, project_title, instagram_url, instagram_embed_url, fallback_image_url FROM finalists WHERE active = 1 ORDER BY RAND()')->fetchAll();
+        $imagesByFinalist = [];
+        if ($finalists) {
+            $ids = array_map(static fn (array $row): int => (int) $row['id'], $finalists);
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $images = $pdo->prepare('SELECT id, finalist_id, alt_text, width_px, height_px, is_cover FROM finalist_images WHERE finalist_id IN (' . $placeholders . ') ORDER BY is_cover DESC, sort_order ASC, id ASC');
+            $images->execute($ids);
+            foreach ($images->fetchAll() as $image) {
+                $imagesByFinalist[(int) $image['finalist_id']][] = $image;
+            }
+        }
+        foreach ($finalists as &$finalist) {
+            $finalist['images'] = $imagesByFinalist[(int) $finalist['id']] ?? [];
+        }
+        unset($finalist);
         $_SESSION['vote_page_at'] = time();
         $ranking = $this->ranking();
         View::render('voting', [
@@ -71,6 +87,37 @@ final class PublicController
             'votingOpen' => Campaign::isVotingOpen() && count($finalists) >= 3,
             'rankingEnabled' => Settings::bool('public_ranking_enabled', false),
         ]);
+    }
+
+    public function finalistImage(int $imageId): never
+    {
+        Schema::ensureFinalistImages();
+        $stmt = Database::connection()->prepare(
+            'SELECT fi.*, f.active AS finalist_active FROM finalist_images fi '
+            . 'JOIN finalists f ON f.id = fi.finalist_id WHERE fi.id = ? LIMIT 1'
+        );
+        $stmt->execute([$imageId]);
+        $image = $stmt->fetch();
+        if (!$image || ((int) $image['finalist_active'] !== 1 && !Auth::user())) {
+            http_response_code(404);
+            exit;
+        }
+        $path = dirname(__DIR__, 2) . '/storage/finalists/' . (int) $image['finalist_id'] . '/' . basename((string) $image['stored_name']);
+        if (!is_file($path) || !hash_equals((string) $image['sha256'], (string) hash_file('sha256', $path))) {
+            http_response_code(404);
+            exit;
+        }
+        $etag = '"' . (string) $image['sha256'] . '"';
+        if (trim((string) ($_SERVER['HTTP_IF_NONE_MATCH'] ?? '')) === $etag) {
+            http_response_code(304);
+            exit;
+        }
+        header('Content-Type: ' . (string) $image['mime_type']);
+        header('Content-Length: ' . (string) filesize($path));
+        header('Cache-Control: public, max-age=86400, immutable');
+        header('ETag: ' . $etag);
+        readfile($path);
+        exit;
     }
 
     public function authenticateSite(): never
@@ -169,7 +216,7 @@ final class PublicController
 
         try {
             $result = Database::transaction(function (PDO $pdo) use ($finalistId, $risk, $signals, $elapsed): array {
-                $candidate = $pdo->prepare('SELECT id, participant_name, project_title FROM finalists WHERE id = ? AND active = 1 FOR UPDATE');
+                $candidate = $pdo->prepare('SELECT id, slug, participant_name, project_title FROM finalists WHERE id = ? AND active = 1 FOR UPDATE');
                 $candidate->execute([$finalistId]);
                 $finalist = $candidate->fetch();
                 if (!$finalist) {
@@ -208,6 +255,7 @@ final class PublicController
                 $eventId = Audit::log('vote.confirmed', [
                     'vote_id' => $voteId,
                     'finalist_id' => (int) $finalistId,
+                    'finalist_slug' => (string) $finalist['slug'],
                     'elapsed_seconds' => max(0, $elapsed),
                     'signals' => $signals,
                     'status' => $status,

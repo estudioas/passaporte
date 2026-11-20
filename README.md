@@ -4,7 +4,7 @@ Subsite completo para `passaporte.enquetedigital.com`, construído para hospedag
 
 ## O que está incluído
 
-- home pública com a campanha em três passos e cadastro no site da Ruffino;
+- home pública pós-inscrições com os próximos passos e chamada para a votação;
 - votação em /votacao e comissão em /jurados, com publicação controlada pelo painel;
 - perfis de André Henning, Bárbara Avila e Gerson Lima, em ordem alfabética, com fotos e links para o Instagram;
 - controles de publicação em /admin/configuracoes;
@@ -15,7 +15,7 @@ Subsite completo para `passaporte.enquetedigital.com`, construído para hospedag
 - CAPTCHA aritmético de uso único, CSRF, honeypot e sinais antifraude;
 - comprovante público e trilha de auditoria encadeada por hash;
 - ranking percentual opcional, sem total absoluto;
-- painel para finalistas, configurações, votos, eventos, inscrições e arquivos;
+- painel para finalistas, carrosséis de fotos, configurações, votos, eventos, inscrições e arquivos;
 - prévia das páginas desativadas para usuários administrativos autenticados;
 - inscrição em quatro etapas, com nota fiscal e 3 a 5 fotos;
 - dados pessoais criptografados e arquivos fora da pasta pública;
@@ -49,6 +49,7 @@ No painel, abra Configurações para ativar/desativar Home, Votação e Jurados.
 - `views/`: telas públicas e administrativas;
 - `database/`: schema e dados iniciais;
 - `storage/uploads/`: documentos e fotos privados;
+- `storage/finalists/`: fotos publicáveis dos carrosséis, protegidas por rota controlada;
 - `bin/`: tarefas de terminal;
 - `docs/`: implantação, segurança, LGPD e aceite.
 

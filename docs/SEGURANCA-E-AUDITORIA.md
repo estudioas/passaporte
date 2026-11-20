@@ -13,6 +13,12 @@ O voto só é persistido depois de o visitante:
 
 Antes da confirmação, a pessoa pode trocar livremente de projeto. Depois dela, a restrição única em `votes.device_hash` impede outro voto no mesmo identificador de dispositivo.
 
+### Identidade dos finalistas e ordem aleatória
+
+Cada finalista possui `finalists.id` e `finalists.slug` permanentes. A ordem dos cartões é randomizada somente na consulta de apresentação. O botão de escolha envia o ID permanente, o servidor confirma que esse mesmo ID está ativo e `votes.finalist_id` mantém a chave estrangeira para o projeto correto. A posição visual, a capa e a ordem das fotos nunca são usadas para registrar ou apurar votos. O evento `vote.confirmed` também registra ID e slug para conferência independente.
+
+As imagens do carrossel ficam em `storage/finalists`, fora da pasta pública, e são entregues pela rota controlada `/media/finalistas/{id}`. Cada arquivo possui MIME validado, dimensões limitadas e SHA-256 conferido antes da entrega.
+
 ### Limite honesto de “um voto por pessoa”
 
 Sem login, CPF ou validação por e-mail/telefone, nenhum site consegue provar matematicamente uma pessoa física única. Esta implementação escolhe menor coleta de dados: um voto por dispositivo pseudônimo, correlação por hash de rede e navegador e revisão de sinais. Limpar cookies, trocar dispositivo e rede pode produzir uma nova identidade; esses padrões devem ser detectados na auditoria. A opção `strict_ip_vote_limit` adiciona limite por rede, mas pode bloquear famílias, escritórios e redes móveis compartilhadas.
