@@ -31,6 +31,12 @@
     };
     carousel.querySelector('[data-carousel-prev]')?.addEventListener('click', () => show(index - 1));
     carousel.querySelector('[data-carousel-next]')?.addEventListener('click', () => show(index + 1));
+    carousel.addEventListener('keydown', (event) => {
+      if (!event.target.closest('[data-carousel-slide]') || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+      event.preventDefault();
+      show(index + (event.key === 'ArrowRight' ? 1 : -1));
+      slides[index]?.focus();
+    });
     show(0);
   });
 
@@ -38,18 +44,57 @@
   if (imageLightbox) {
     const lightboxImage = imageLightbox.querySelector('[data-lightbox-image]');
     const lightboxCaption = imageLightbox.querySelector('[data-lightbox-caption]');
-    document.querySelectorAll('[data-image-zoom]').forEach((button) => {
-      button.addEventListener('click', () => {
-        const image = button.closest('[data-carousel-slide]')?.querySelector('img');
-        if (!image) return;
-        lightboxImage.src = image.currentSrc || image.src;
-        lightboxImage.alt = image.alt;
-        lightboxCaption.textContent = image.alt;
-        imageLightbox.showModal();
+    const previousButton = imageLightbox.querySelector('[data-lightbox-prev]');
+    const nextButton = imageLightbox.querySelector('[data-lightbox-next]');
+    let lightboxItems = [];
+    let lightboxIndex = 0;
+    let lastTrigger = null;
+    const renderLightbox = (nextIndex) => {
+      if (!lightboxItems.length) return;
+      lightboxIndex = (nextIndex + lightboxItems.length) % lightboxItems.length;
+      const image = lightboxItems[lightboxIndex];
+      lightboxImage.src = image.currentSrc || image.src;
+      lightboxImage.alt = image.alt;
+      lightboxCaption.textContent = lightboxItems.length > 1
+        ? `Foto ${lightboxIndex + 1} de ${lightboxItems.length} — ${image.alt}`
+        : image.alt;
+      previousButton.hidden = nextButton.hidden = lightboxItems.length < 2;
+    };
+    const openLightbox = (trigger) => {
+      const carousel = trigger.closest('[data-carousel]');
+      const slide = trigger.closest('[data-carousel-slide]');
+      lightboxItems = [...(carousel?.querySelectorAll('[data-carousel-slide] img') || [])];
+      const activeImage = slide?.querySelector('img');
+      lightboxIndex = Math.max(0, lightboxItems.indexOf(activeImage));
+      if (!activeImage || !lightboxItems.length) return;
+      lastTrigger = trigger;
+      renderLightbox(lightboxIndex);
+      imageLightbox.showModal();
+      imageLightbox.querySelector('.image-lightbox-close button')?.focus();
+    };
+    document.querySelectorAll('[data-image-zoom]').forEach((trigger) => {
+      trigger.addEventListener('click', () => openLightbox(trigger));
+      trigger.addEventListener('keydown', (event) => {
+        if (!['Enter', ' '].includes(event.key)) return;
+        event.preventDefault();
+        openLightbox(trigger);
       });
+    });
+    previousButton?.addEventListener('click', () => renderLightbox(lightboxIndex - 1));
+    nextButton?.addEventListener('click', () => renderLightbox(lightboxIndex + 1));
+    imageLightbox.addEventListener('keydown', (event) => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault();
+      if (event.key === 'Home') renderLightbox(0);
+      else if (event.key === 'End') renderLightbox(lightboxItems.length - 1);
+      else renderLightbox(lightboxIndex + (event.key === 'ArrowRight' ? 1 : -1));
     });
     imageLightbox.addEventListener('click', (event) => {
       if (event.target === imageLightbox) imageLightbox.close();
+    });
+    imageLightbox.addEventListener('close', () => {
+      lightboxImage.removeAttribute('src');
+      lastTrigger?.focus();
     });
   }
 

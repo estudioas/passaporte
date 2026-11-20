@@ -8,7 +8,6 @@ $defaultImages = [
     '/assets/img/finalista-ambiente-02-v2.jpg',
     '/assets/img/finalista-ambiente-03-v2.jpg',
 ];
-$identityColors = ['#8e281f', '#315f5a', '#66507a'];
 ?>
 <section id="top" class="passport-hero">
     <div class="blueprint" aria-hidden="true"></div>
@@ -38,21 +37,20 @@ $identityColors = ['#8e281f', '#315f5a', '#66507a'];
         <?php foreach ($finalists as $index => $finalist): ?>
             <?php
                 $identityNumber = (int) sprintf('%u', crc32((string) $finalist['slug']));
-                $accent = $identityColors[$identityNumber % count($identityColors)];
                 $fallback = !empty($finalist['fallback_image_url'])
                     ? (string) $finalist['fallback_image_url']
                     : $defaultImages[$identityNumber % count($defaultImages)];
                 $projectImages = $finalist['images'] ?? [];
             ?>
-            <article class="candidate-card" data-finalist-id="<?= (int) $finalist['id'] ?>" data-finalist-key="<?= $h($finalist['slug']) ?>" style="--candidate-accent:<?= $h($accent) ?>">
+            <article class="candidate-card" data-finalist-id="<?= (int) $finalist['id'] ?>" data-finalist-key="<?= $h($finalist['slug']) ?>">
                 <div class="candidate-carousel" data-carousel aria-label="Fotos do projeto <?= $h($finalist['project_title']) ?>">
                     <div class="candidate-slides">
                     <?php if ($projectImages): ?>
                         <?php foreach ($projectImages as $imageIndex => $image): ?>
-                            <figure class="candidate-image" data-carousel-slide <?= $imageIndex === 0 ? '' : 'hidden' ?>><img src="/media/finalistas/<?= (int) $image['id'] ?>" alt="<?= $h($image['alt_text']) ?>" width="<?= (int) $image['width_px'] ?>" height="<?= (int) $image['height_px'] ?>" <?= $imageIndex === 0 ? '' : 'loading="lazy"' ?>><button class="candidate-zoom" type="button" data-image-zoom aria-label="Ampliar esta foto" title="Ver foto em detalhes"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5M10.5 7.5v6M7.5 10.5h6"></path></svg></button></figure>
+                            <figure class="candidate-image" data-carousel-slide data-image-zoom tabindex="0" role="button" aria-label="Ampliar esta foto" title="Ver foto em detalhes" <?= $imageIndex === 0 ? '' : 'hidden' ?>><img src="/media/finalistas/<?= (int) $image['id'] ?>" alt="<?= $h($image['alt_text']) ?>" width="<?= (int) $image['width_px'] ?>" height="<?= (int) $image['height_px'] ?>" <?= $imageIndex === 0 ? '' : 'loading="lazy"' ?>><span class="candidate-zoom" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5M10.5 7.5v6M7.5 10.5h6"></path></svg></span></figure>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <figure class="candidate-image" data-carousel-slide><img src="<?= $h($fallback) ?>" alt="Projeto <?= $h($finalist['project_title']) ?>" loading="lazy"><button class="candidate-zoom" type="button" data-image-zoom aria-label="Ampliar esta foto" title="Ver foto em detalhes"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5M10.5 7.5v6M7.5 10.5h6"></path></svg></button></figure>
+                        <figure class="candidate-image" data-carousel-slide data-image-zoom tabindex="0" role="button" aria-label="Ampliar esta foto" title="Ver foto em detalhes"><img src="<?= $h($fallback) ?>" alt="Projeto <?= $h($finalist['project_title']) ?>" loading="lazy"><span class="candidate-zoom" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5M10.5 7.5v6M7.5 10.5h6"></path></svg></span></figure>
                     <?php endif; ?>
                     </div>
                     <span class="candidate-identity">Projeto finalista</span>
@@ -75,6 +73,8 @@ $identityColors = ['#8e281f', '#315f5a', '#66507a'];
 
 <dialog class="image-lightbox" data-image-lightbox aria-label="Visualização ampliada da foto">
     <form method="dialog" class="image-lightbox-close"><button value="cancel" aria-label="Fechar imagem ampliada">×</button></form>
+    <button class="image-lightbox-nav image-lightbox-prev" type="button" data-lightbox-prev aria-label="Foto anterior">‹</button>
+    <button class="image-lightbox-nav image-lightbox-next" type="button" data-lightbox-next aria-label="Próxima foto">›</button>
     <figure><img data-lightbox-image src="" alt=""><figcaption data-lightbox-caption></figcaption></figure>
 </dialog>
 
