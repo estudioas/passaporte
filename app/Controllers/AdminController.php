@@ -8,6 +8,7 @@ use App\Core\Audit;
 use App\Core\Analytics;
 use App\Core\Auth;
 use App\Core\Captcha;
+use App\Core\Config;
 use App\Core\Csrf;
 use App\Core\Database;
 use App\Core\Privacy;
