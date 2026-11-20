@@ -103,21 +103,40 @@ final class AdminController
 
     public function finalistDiagnostics(): never
     {
-        Auth::requirePermission('finalists');
+        $user = Auth::requirePermission('finalists');
         try {
             Schema::ensureFinalistImages();
             $pdo = Database::connection();
             $table = $pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'finalist_images'")->fetchColumn();
             $columns = $pdo->query('SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = "finalist_images"')->fetchColumn();
             $folder = dirname(__DIR__, 2) . '/storage/finalists';
+            $rows = $pdo->query('SELECT * FROM finalists ORDER BY active DESC, sort_order ASC, id ASC')->fetchAll();
+            $images = $pdo->query('SELECT * FROM finalist_images ORDER BY finalist_id ASC, is_cover DESC, sort_order ASC, id ASC')->fetchAll();
+            $byFinalist = [];
+            foreach ($images as $image) {
+                $byFinalist[(int) $image['finalist_id']][] = $image;
+            }
+            foreach ($rows as &$row) {
+                $row['images'] = $byFinalist[(int) $row['id']] ?? [];
+            }
+            unset($row);
+            ob_start();
+            View::render('admin/finalists', ['title' => 'Finalistas', 'user' => $user, 'finalists' => $rows, 'maxImages' => max(1, (int) Config::get('security.max_finalist_images', 10)), 'message' => null, 'error' => null], 'admin/layout');
+            $renderedBytes = strlen((string) ob_get_clean());
             Response::json([
                 'ok' => (int) $table === 1 && (int) $columns >= 13,
                 'table' => (int) $table === 1,
                 'columns' => (int) $columns,
                 'storage_exists' => is_dir($folder),
                 'storage_writable' => is_dir($folder) && is_writable($folder),
+                'finalists' => count($rows),
+                'images' => count($images),
+                'rendered_bytes' => $renderedBytes,
             ]);
         } catch (Throwable $e) {
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
             Response::json([
                 'ok' => false,
                 'error_type' => get_class($e),
