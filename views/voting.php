@@ -47,10 +47,10 @@ $defaultImages = [
                     <div class="candidate-slides">
                     <?php if ($projectImages): ?>
                         <?php foreach ($projectImages as $imageIndex => $image): ?>
-                            <figure class="candidate-image" data-carousel-slide data-image-zoom tabindex="0" role="button" aria-label="Ampliar esta foto" title="Ver foto em detalhes" <?= $imageIndex === 0 ? '' : 'hidden' ?>><img src="/media/finalistas/<?= (int) $image['id'] ?>" alt="<?= $h($image['alt_text']) ?>" width="<?= (int) $image['width_px'] ?>" height="<?= (int) $image['height_px'] ?>" <?= $imageIndex === 0 ? '' : 'loading="lazy"' ?>><span class="candidate-zoom" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5M10.5 7.5v6M7.5 10.5h6"></path></svg></span></figure>
+                            <figure class="candidate-image" data-carousel-slide data-image-zoom tabindex="0" role="button" aria-label="Ampliar esta foto" title="Ver foto em detalhes" <?= $imageIndex === 0 ? '' : 'hidden' ?>><img src="/media/finalistas/<?= (int) $image['id'] ?>" alt="<?= $h($image['alt_text']) ?>" width="<?= (int) $image['width_px'] ?>" height="<?= (int) $image['height_px'] ?>" <?= $imageIndex === 0 ? '' : 'loading="lazy"' ?>></figure>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <figure class="candidate-image" data-carousel-slide data-image-zoom tabindex="0" role="button" aria-label="Ampliar esta foto" title="Ver foto em detalhes"><img src="<?= $h($fallback) ?>" alt="Projeto <?= $h($finalist['project_title']) ?>" loading="lazy"><span class="candidate-zoom" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5M10.5 7.5v6M7.5 10.5h6"></path></svg></span></figure>
+                        <figure class="candidate-image" data-carousel-slide data-image-zoom tabindex="0" role="button" aria-label="Ampliar esta foto" title="Ver foto em detalhes"><img src="<?= $h($fallback) ?>" alt="Projeto <?= $h($finalist['project_title']) ?>" loading="lazy"></figure>
                     <?php endif; ?>
                     </div>
                     <span class="candidate-identity">Projeto finalista</span>
