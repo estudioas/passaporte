@@ -517,6 +517,8 @@
       }
       regionalMap.querySelectorAll('[data-select-uf]').forEach((button) => button.classList.toggle('is-selected', button.dataset.selectUf === uf));
       mapRoot?.querySelectorAll('[data-vote-map-state]').forEach((shape) => shape.classList.toggle('is-selected', shape.id === uf));
+      const selectedShape = mapRoot?.querySelector(`#${uf}`);
+      if (selectedShape?.parentNode) selectedShape.parentNode.appendChild(selectedShape);
     };
 
     const prepareMap = () => {

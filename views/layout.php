@@ -54,6 +54,6 @@ $baseUrl = rtrim((string) Config::get('app.base_url', ''), '/');
     <p class="footer-legal">Inscrições: 01/10 a 13/11/2026 · Votação: 25/11 a 11/12/2026 · Resultado até 14/12/2026.</p>
 </footer>
 <aside class="lgpd-notice" data-lgpd-notice aria-label="Aviso de privacidade"><span>Ao continuar, você reconhece o tratamento de dados necessário à segurança da votação. <a href="/privacidade">Saiba mais</a>.</span><button class="lgpd-close" type="button" data-lgpd-close aria-label="Fechar aviso de privacidade">×</button></aside>
-<script src="/assets/js/app.js?v=3.12.0" defer></script>
+<script src="/assets/js/app.js?v=3.12.1" defer></script>
 </body>
 </html>

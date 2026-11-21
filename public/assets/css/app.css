@@ -142,4 +142,4 @@
 
 /* Contorno uniforme do mapa, independente da escala do SVG. */
 .regional-map-visual .state{stroke:#fff;stroke-width:1;vector-effect:non-scaling-stroke;transition:fill .18s ease,filter .18s ease,stroke .18s ease}
-.regional-map-visual .state:hover,.regional-map-visual .state:focus,.regional-map-visual .state.is-selected{stroke:#6f241f;stroke-width:1.25}
+.regional-map-visual .state:hover,.regional-map-visual .state:focus,.regional-map-visual .state.is-selected{stroke:#6f241f;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round}
