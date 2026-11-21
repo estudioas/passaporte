@@ -24,7 +24,7 @@
 </div>
 <div class="regional-map-layout">
 <div class="regional-map-visual">
-<object type="image/svg+xml" data="/assets/img/brasil-estados.svg?v=1" aria-label="Mapa interativo do Brasil dividido por estados" data-brazil-map-object></object>
+<div role="group" aria-label="Mapa interativo do Brasil dividido por estados" data-brazil-map-inline><?php require dirname(__DIR__, 2) . '/public/assets/img/brasil-estados.svg'; ?></div>
 <p><span class="map-scale map-scale-0"></span>Sem votos <span class="map-scale map-scale-1"></span>Menor volume <span class="map-scale map-scale-4"></span>Maior volume</p>
 </div>
 <aside class="regional-map-detail" data-region-detail aria-live="polite">

@@ -2,17 +2,6 @@
      width="353.845px" height="367.766px" viewBox="0 0 353.845 367.766" enable-background="new 0 0 353.845 367.766"
      xml:space="preserve">
 
-    <style type="text/css">
-        .state {
-            cursor: default;
-            fill: #D3DEE2;
-        }
-
-            .state:hover {
-                fill: #FCAF17;
-                transition: 0.1s linear;
-            }
-    </style>
 <g>
     <polygon fill="#F3F3F3" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" points="
         319.646,163.646 319.099,164.092 320.047,163.646 320.246,163.147 319.696,162.899     "/>

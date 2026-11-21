@@ -444,7 +444,7 @@
   const regionalMap = document.querySelector('[data-regional-map]');
   if (regionalMap) {
     const dataNode = regionalMap.querySelector('[data-regional-vote-data]');
-    const mapObject = regionalMap.querySelector('[data-brazil-map-object]');
+    const mapRoot = regionalMap.querySelector('[data-brazil-map-inline]');
     const nameNode = regionalMap.querySelector('[data-region-name]');
     const kickerNode = regionalMap.querySelector('[data-region-kicker]');
     const summaryNode = regionalMap.querySelector('[data-region-summary]');
@@ -516,18 +516,13 @@
         citiesNode.appendChild(list);
       }
       regionalMap.querySelectorAll('[data-select-uf]').forEach((button) => button.classList.toggle('is-selected', button.dataset.selectUf === uf));
-      const doc = mapObject?.contentDocument;
-      doc?.querySelectorAll('[data-vote-map-state]').forEach((shape) => shape.classList.toggle('is-selected', shape.id === uf));
+      mapRoot?.querySelectorAll('[data-vote-map-state]').forEach((shape) => shape.classList.toggle('is-selected', shape.id === uf));
     };
 
     const prepareMap = () => {
-      const doc = mapObject?.contentDocument;
-      if (!doc) return;
-      const style = doc.createElementNS('http://www.w3.org/2000/svg', 'style');
-      style.textContent = '.state{cursor:pointer;transition:fill .18s ease,filter .18s ease;outline:none}.state:hover,.state:focus,.state.is-selected{filter:brightness(.82);stroke:#541813;stroke-width:2.5}.state:focus{stroke:#211d1b;stroke-width:3}';
-      doc.documentElement.appendChild(style);
+      if (!mapRoot) return;
       ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].forEach((uf) => {
-        const shape = doc.getElementById(uf);
+        const shape = mapRoot.querySelector(`#${uf}`);
         if (!shape) return;
         const state = states[uf];
         const volume = Number(state?.total) || 0;
@@ -549,8 +544,7 @@
       });
       if (selectedUf) renderState(selectedUf);
     };
-    mapObject?.addEventListener('load', prepareMap);
-    if (mapObject?.contentDocument?.documentElement) prepareMap();
+    prepareMap();
     regionalMap.querySelectorAll('[data-select-uf]').forEach((button) => button.addEventListener('click', () => {
       renderState(button.dataset.selectUf);
       regionalMap.querySelector('[data-region-detail]')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
