@@ -516,14 +516,31 @@
         citiesNode.appendChild(list);
       }
       regionalMap.querySelectorAll('[data-select-uf]').forEach((button) => button.classList.toggle('is-selected', button.dataset.selectUf === uf));
-      mapRoot?.querySelectorAll('[data-vote-map-state]').forEach((shape) => shape.classList.toggle('is-selected', shape.id === uf));
       const selectedShape = mapRoot?.querySelector(`#${uf}`);
-      const mapSvg = mapRoot?.querySelector('svg');
-      if (selectedShape && mapSvg) mapSvg.appendChild(selectedShape);
+      const highlightLayer = mapRoot?.querySelector('[data-map-highlight]');
+      clear(highlightLayer);
+      if (selectedShape && highlightLayer) {
+        const highlight = selectedShape.cloneNode(true);
+        highlight.removeAttribute('id');
+        highlight.removeAttribute('tabindex');
+        highlight.removeAttribute('role');
+        highlight.removeAttribute('aria-label');
+        highlight.removeAttribute('data-vote-map-state');
+        highlight.classList.add('is-selected', 'map-state-highlight');
+        highlightLayer.appendChild(highlight);
+      }
     };
 
     const prepareMap = () => {
       if (!mapRoot) return;
+      const mapSvg = mapRoot.querySelector('svg');
+      if (mapSvg && !mapSvg.querySelector('[data-map-highlight]')) {
+        const highlightLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        highlightLayer.setAttribute('data-map-highlight', '');
+        highlightLayer.setAttribute('aria-hidden', 'true');
+        highlightLayer.style.pointerEvents = 'none';
+        mapSvg.appendChild(highlightLayer);
+      }
       ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].forEach((uf) => {
         const shape = mapRoot.querySelector(`#${uf}`);
         if (!shape) return;
