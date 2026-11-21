@@ -9,7 +9,7 @@ $defaultImages = [
     '/assets/img/finalista-ambiente-03-v2.jpg',
 ];
 ?>
-<section id="top" class="passport-hero">
+<section id="top" class="passport-hero voting-hero">
     <div class="blueprint" aria-hidden="true"></div>
     <div class="passport-hero-copy">
         <span class="passport-eyebrow">#<span class="tag-keyword">Passaporte</span>Ruffino</span>

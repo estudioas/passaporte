@@ -147,3 +147,4 @@
 .regional-map-visual .state:focus:not(.map-state-highlight){filter:none;stroke:#fff;stroke-width:1}
 .tag-keyword.tag-keyword-light:after{background:#fff}
 .campaign-trust h2{text-transform:none}
+.voting-hero h1,.passport-vote-section .passport-section-heading h2{text-transform:none}
