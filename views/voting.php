@@ -47,10 +47,10 @@ $defaultImages = [
                     <div class="candidate-slides">
                     <?php if ($projectImages): ?>
                         <?php foreach ($projectImages as $imageIndex => $image): ?>
-                            <figure class="candidate-image" data-carousel-slide data-image-zoom tabindex="0" role="button" aria-label="Ampliar esta foto" title="Ver foto em detalhes" <?= $imageIndex === 0 ? '' : 'hidden' ?>><img src="/media/finalistas/<?= (int) $image['id'] ?>" alt="<?= $h($image['alt_text']) ?>" width="<?= (int) $image['width_px'] ?>" height="<?= (int) $image['height_px'] ?>" <?= $imageIndex === 0 ? '' : 'loading="lazy"' ?>></figure>
+                            <figure class="candidate-image" data-carousel-slide data-image-zoom data-zoom-label="Ver foto em detalhes" tabindex="0" role="button" aria-label="Ampliar esta foto" <?= $imageIndex === 0 ? '' : 'hidden' ?>><img src="/media/finalistas/<?= (int) $image['id'] ?>" alt="<?= $h($image['alt_text']) ?>" width="<?= (int) $image['width_px'] ?>" height="<?= (int) $image['height_px'] ?>" <?= $imageIndex === 0 ? '' : 'loading="lazy"' ?>></figure>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <figure class="candidate-image" data-carousel-slide data-image-zoom tabindex="0" role="button" aria-label="Ampliar esta foto" title="Ver foto em detalhes"><img src="<?= $h($fallback) ?>" alt="Projeto <?= $h($finalist['project_title']) ?>" loading="lazy"></figure>
+                        <figure class="candidate-image" data-carousel-slide data-image-zoom data-zoom-label="Ver foto em detalhes" tabindex="0" role="button" aria-label="Ampliar esta foto"><img src="<?= $h($fallback) ?>" alt="Projeto <?= $h($finalist['project_title']) ?>" loading="lazy"></figure>
                     <?php endif; ?>
                     </div>
                     <span class="candidate-identity">Projeto finalista</span>
