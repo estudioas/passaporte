@@ -672,6 +672,13 @@ final class AdminController
         Response::json(['ok' => true, 'online' => Analytics::online(), 'updated_at' => date('H:i:s')]);
     }
 
+    public function voteEvolution(): never
+    {
+        Auth::requirePermission('analytics');
+        header('Cache-Control: no-store, private');
+        Response::json(['ok' => true, 'evolution' => Analytics::voteEvolution()]);
+    }
+
     private static function pagination(int $total, string $key, int $size = 50): array
     {
         $pages = max(1, (int) ceil($total / $size));

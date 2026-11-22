@@ -150,6 +150,75 @@ final class Analytics
             'started' => Settings::get('analytics_started_at', ''),
             'unknown_city' => (int) $query('SELECT COUNT(*) AS n' . $where . "AND city = ''")[0]['n'],
             'regional_votes' => self::regionalVotes($range),
+            'vote_evolution' => self::voteEvolution(),
+        ];
+    }
+
+    /**
+     * Cumulative daily result history for the official voting period.
+     * Only currently valid votes and active finalists are included.
+     */
+    public static function voteEvolution(): array
+    {
+        $pdo = Database::connection();
+        $start = new DateTimeImmutable(substr((string) Config::get('campaign.voting_starts_at'), 0, 10));
+        $end = new DateTimeImmutable(substr((string) Config::get('campaign.voting_ends_at'), 0, 10));
+        $today = new DateTimeImmutable('today');
+        $finalists = $pdo->query('SELECT id, participant_name, project_title FROM finalists WHERE active = 1 ORDER BY sort_order, id')->fetchAll();
+
+        $stmt = $pdo->prepare('SELECT DATE(v.confirmed_at) AS day, v.finalist_id, COUNT(*) AS votes
+            FROM votes v
+            JOIN finalists f ON f.id = v.finalist_id
+            WHERE v.status = "valid" AND f.active = 1 AND v.confirmed_at >= ? AND v.confirmed_at < ?
+            GROUP BY DATE(v.confirmed_at), v.finalist_id ORDER BY day, v.finalist_id');
+        $stmt->execute([$start->format('Y-m-d'), $end->modify('+1 day')->format('Y-m-d')]);
+
+        $daily = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $daily[(string) $row['day']][(int) $row['finalist_id']] = (int) $row['votes'];
+        }
+
+        $catalog = [];
+        $running = [];
+        foreach ($finalists as $finalist) {
+            $id = (int) $finalist['id'];
+            $catalog[] = [
+                'id' => $id,
+                'project' => (string) $finalist['project_title'],
+                'participant' => (string) $finalist['participant_name'],
+            ];
+            $running[$id] = 0;
+        }
+
+        $days = [];
+        for ($day = $start; $day <= $end; $day = $day->modify('+1 day')) {
+            $key = $day->format('Y-m-d');
+            foreach ($running as $id => $votes) {
+                $running[$id] += (int) ($daily[$key][$id] ?? 0);
+            }
+            $total = array_sum($running);
+            $candidates = [];
+            foreach ($running as $id => $votes) {
+                $candidates[(string) $id] = [
+                    'votes' => $votes,
+                    'percentage' => $total > 0 ? round($votes * 100 / $total, 2) : 0.0,
+                ];
+            }
+            $days[] = [
+                'date' => $key,
+                'label' => $day->format('d/m'),
+                'total' => $total,
+                'future' => $day > $today,
+                'candidates' => $candidates,
+            ];
+        }
+
+        return [
+            'starts_at' => $start->format('Y-m-d'),
+            'ends_at' => $end->format('Y-m-d'),
+            'updated_at' => date('H:i:s'),
+            'finalists' => $catalog,
+            'days' => $days,
         ];
     }
 

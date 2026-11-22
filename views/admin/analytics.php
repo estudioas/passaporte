@@ -13,7 +13,21 @@
 <article><span>Sessões de uma página</span><strong><?= number_format((float) $report['sessions']['single_page'], 1, ',', '.') ?>%</strong><small>não equivale à taxa de rejeição</small></article>
 <article><span>Cidade não informada</span><strong><?= $n($report['unknown_city']) ?></strong><small>visualizações sem localização municipal</small></article>
 </section>
-<?php $regional = $report['regional_votes']; $topState = $regional['top_state']; $topCity = $regional['top_city']; ?>
+<?php $regional = $report['regional_votes']; $topState = $regional['top_state']; $topCity = $regional['top_city']; $evolution = $report['vote_evolution']; ?>
+<section class="admin-panel vote-evolution-panel" data-vote-evolution data-evolution-url="/admin/analytics/evolucao-votos">
+<div class="panel-heading"><div><span>Evolução da apuração</span><h2>Curva diária dos resultados</h2></div><small><?= date('d/m/Y', strtotime($evolution['starts_at'])) ?> a <?= date('d/m/Y', strtotime($evolution['ends_at'])) ?></small></div>
+<p class="analytics-note">As linhas mostram o percentual acumulado de cada finalista entre os votos válidos confirmados até cada dia. Votos posteriormente invalidados deixam de compor toda a curva.</p>
+<div class="vote-evolution-legend" data-vote-evolution-legend></div>
+<div class="vote-evolution-chart" role="img" aria-label="Evolução diária dos percentuais acumulados por finalista. Os valores completos estão disponíveis na tabela abaixo.">
+<svg viewBox="0 0 1000 380" preserveAspectRatio="xMidYMid meet" data-vote-evolution-svg aria-hidden="true"></svg>
+<p class="vote-evolution-empty" data-vote-evolution-empty hidden>A curva aparecerá assim que os primeiros votos válidos forem confirmados.</p>
+</div>
+<p class="analytics-note vote-evolution-status" data-vote-evolution-status>Atualização automática a cada 30 segundos · <?= $h($evolution['updated_at']) ?></p>
+<script type="application/json" data-vote-evolution-data><?= json_encode($evolution, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
+<details class="vote-evolution-table"><summary>Ver evolução diária em números</summary><div class="table-wrap"><table><thead><tr><th>Dia</th><th>Votos acumulados</th><?php foreach ($evolution['finalists'] as $finalist): ?><th><?= $h($finalist['project']) ?></th><?php endforeach; ?></tr></thead><tbody>
+<?php foreach ($evolution['days'] as $point): ?><tr><td><?= $h($point['label']) ?><?= $point['future'] ? ' · previsto' : '' ?></td><td><?= $point['future'] ? '—' : $n($point['total']) ?></td><?php foreach ($evolution['finalists'] as $finalist): $candidate = $point['candidates'][(string) $finalist['id']] ?? ['votes' => 0, 'percentage' => 0]; ?><td><?= $point['future'] ? '—' : number_format((float) $candidate['percentage'], 1, ',', '.') . '% · ' . $n($candidate['votes']) . ' votos' ?></td><?php endforeach; ?></tr><?php endforeach; ?>
+</tbody></table></div></details>
+</section>
 <section class="admin-panel regional-votes-panel" id="mapa-votos" data-regional-map>
 <div class="panel-heading"><div><span>Auditoria geográfica dos votos</span><h2>Origem e liderança por região</h2></div><small>Somente votos válidos do Brasil · <?= $h($range['start']) ?> a <?= $h($range['end']) ?></small></div>
 <p class="analytics-note">A localização corresponde à UF e à cidade informadas pela infraestrutura de rede no momento da confirmação. O mapa não expõe endereços IP e não altera a apuração.</p>

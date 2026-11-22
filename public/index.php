@@ -49,6 +49,7 @@ $routes = [
         '/api/captcha/vote' => static fn () => $public->captcha('vote'),
         '/admin/login' => [$admin, 'login'],
         '/admin/analytics' => [$admin, 'analytics'],
+        '/admin/analytics/evolucao-votos' => [$admin, 'voteEvolution'],
         '/admin/analytics/exportar' => [$admin, 'exportAnalytics'],
         '/admin/analytics/online' => [$admin, 'online'],
         '/admin' => [$admin, 'dashboard'],

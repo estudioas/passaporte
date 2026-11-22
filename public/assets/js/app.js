@@ -236,6 +236,111 @@
     document.addEventListener('visibilitychange', refreshOnline);
   }
 
+  const voteEvolutionPanel = document.querySelector('[data-vote-evolution]');
+  if (voteEvolutionPanel) {
+    const svg = voteEvolutionPanel.querySelector('[data-vote-evolution-svg]');
+    const legend = voteEvolutionPanel.querySelector('[data-vote-evolution-legend]');
+    const empty = voteEvolutionPanel.querySelector('[data-vote-evolution-empty]');
+    const status = voteEvolutionPanel.querySelector('[data-vote-evolution-status]');
+    const source = voteEvolutionPanel.querySelector('[data-vote-evolution-data]');
+    const colors = ['#7b1f27', '#bd6d5d', '#514943', '#c79b52', '#626b77'];
+    const ns = 'http://www.w3.org/2000/svg';
+    let pending = false;
+
+    const svgNode = (name, attributes = {}, text = '') => {
+      const node = document.createElementNS(ns, name);
+      Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, String(value)));
+      if (text) node.textContent = text;
+      return node;
+    };
+    const smoothPath = (points) => {
+      if (!points.length) return '';
+      if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+      let path = `M ${points[0].x} ${points[0].y}`;
+      for (let i = 0; i < points.length - 1; i += 1) {
+        const p0 = points[i - 1] || points[i];
+        const p1 = points[i];
+        const p2 = points[i + 1];
+        const p3 = points[i + 2] || p2;
+        const cp1x = p1.x + (p2.x - p0.x) / 6;
+        const cp1y = p1.y + (p2.y - p0.y) / 6;
+        const cp2x = p2.x - (p3.x - p1.x) / 6;
+        const cp2y = p2.y - (p3.y - p1.y) / 6;
+        path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+      }
+      return path;
+    };
+    const renderEvolution = (data) => {
+      if (!svg || !legend || !data?.days?.length) return;
+      const width = 1000;
+      const height = 380;
+      const bounds = {left: 62, right: 24, top: 22, bottom: 52};
+      const plotWidth = width - bounds.left - bounds.right;
+      const plotHeight = height - bounds.top - bounds.bottom;
+      svg.replaceChildren();
+      legend.replaceChildren();
+
+      [0, 25, 50, 75, 100].forEach((value) => {
+        const y = bounds.top + plotHeight - value * plotHeight / 100;
+        svg.append(svgNode('line', {x1: bounds.left, y1: y, x2: width - bounds.right, y2: y, class: 'vote-grid-line'}));
+        svg.append(svgNode('text', {x: bounds.left - 12, y: y + 4, 'text-anchor': 'end', class: 'vote-axis-label'}, `${value}%`));
+      });
+
+      const labelEvery = Math.max(1, Math.ceil(data.days.length / 8));
+      data.days.forEach((day, index) => {
+        if (index % labelEvery !== 0 && index !== data.days.length - 1) return;
+        const x = bounds.left + (data.days.length === 1 ? plotWidth / 2 : index * plotWidth / (data.days.length - 1));
+        svg.append(svgNode('text', {x, y: height - 18, 'text-anchor': 'middle', class: `vote-axis-label${day.future ? ' is-future' : ''}`}, day.label));
+      });
+
+      const hasVotes = data.days.some((day) => !day.future && Number(day.total) > 0);
+      if (empty) empty.hidden = hasVotes;
+      (data.finalists || []).forEach((finalist, finalistIndex) => {
+        const color = colors[finalistIndex % colors.length];
+        const key = String(finalist.id);
+        const item = document.createElement('span');
+        const dot = document.createElement('i');
+        dot.style.backgroundColor = color;
+        item.append(dot, document.createTextNode(finalist.project));
+        legend.append(item);
+        const points = data.days.map((day, index) => {
+          if (day.future || Number(day.total) <= 0) return null;
+          const candidate = day.candidates?.[key] || {percentage: 0, votes: 0};
+          return {
+            x: bounds.left + (data.days.length === 1 ? plotWidth / 2 : index * plotWidth / (data.days.length - 1)),
+            y: bounds.top + plotHeight - Number(candidate.percentage) * plotHeight / 100,
+            day,
+            candidate,
+          };
+        }).filter(Boolean);
+        if (!points.length) return;
+        svg.append(svgNode('path', {d: smoothPath(points), fill: 'none', stroke: color, class: 'vote-evolution-line'}));
+        points.forEach((point) => {
+          const circle = svgNode('circle', {cx: point.x, cy: point.y, r: 5, fill: color, class: 'vote-evolution-point'});
+          circle.append(svgNode('title', {}, `${point.day.label} · ${finalist.project}: ${Number(point.candidate.percentage).toLocaleString('pt-BR', {minimumFractionDigits: 1, maximumFractionDigits: 1})}% · ${point.candidate.votes} votos`));
+          svg.append(circle);
+        });
+      });
+      if (status) status.textContent = `Atualização automática a cada 30 segundos · ${data.updated_at}`;
+    };
+
+    try { renderEvolution(JSON.parse(source?.textContent || '{}')); } catch (_) { /* A tabela permanece disponível. */ }
+    const refreshEvolution = async () => {
+      if (document.visibilityState !== 'visible' || pending) return;
+      pending = true;
+      try {
+        const response = await fetch(voteEvolutionPanel.dataset.evolutionUrl, {credentials: 'same-origin', cache: 'no-store'});
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error('indisponível');
+        renderEvolution(data.evolution);
+      } catch (_) {
+        if (status) status.textContent = 'Sem atualização ao vivo; tentando novamente…';
+      } finally { pending = false; }
+    };
+    setInterval(refreshEvolution, 30000);
+    document.addEventListener('visibilitychange', refreshEvolution);
+  }
+
   const dialog = document.querySelector('[data-vote-dialog]');
   if (dialog) {
     let selectedId = null;
