@@ -99,6 +99,9 @@ final class PublicController
         }
         $this->logPageView('results');
         $mode = Campaign::resultsPhase();
+        if (Auth::user() && ($_GET['preview'] ?? '') === 'awaiting') {
+            $mode = 'awaiting';
+        }
         View::render('results', [
             'title' => $mode === 'final' ? 'Resultado final da votação' : ($mode === 'awaiting' ? 'Resultado em apuração' : 'Resultado parcial da votação'),
             'description' => 'Acompanhe os percentuais da votação popular do Passaporte Ruffino, inclusive por região do Brasil.',
