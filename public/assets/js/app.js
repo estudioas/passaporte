@@ -249,10 +249,21 @@
     const heading = voteEvolutionPanel.querySelector('[data-vote-evolution-heading]');
     const period = voteEvolutionPanel.querySelector('[data-vote-evolution-period]');
     const table = voteEvolutionPanel.querySelector('[data-vote-evolution-table]');
+    const startLabel = voteEvolutionPanel.querySelector('[data-vote-evolution-start-label]');
+    const endField = voteEvolutionPanel.querySelector('[data-vote-evolution-end]');
     const colors = ['#7b1f2a', '#b77a25', '#386a70', '#c36b4b', '#62527a'];
     const ns = 'http://www.w3.org/2000/svg';
     let pending = false;
     let currentEvolution = null;
+
+    const syncEvolutionMode = () => {
+      if (!controls) return;
+      const hourly = controls.elements.granularity.value === 'hour';
+      if (hourly) controls.elements.end.value = controls.elements.start.value;
+      if (startLabel) startLabel.textContent = hourly ? 'Dia' : 'De';
+      if (endField) endField.hidden = hourly;
+      if (fullPeriodButton) fullPeriodButton.hidden = hourly;
+    };
 
     const svgNode = (name, attributes = {}, text = '') => {
       const node = document.createElementNS(ns, name);
@@ -320,6 +331,7 @@
         controls.elements.granularity.value = data.granularity;
         controls.elements.start.value = data.range_start;
         controls.elements.end.value = data.range_end;
+        syncEvolutionMode();
       }
       renderEvolutionTable(data);
       const width = 1000;
@@ -394,8 +406,11 @@
     };
     controls?.addEventListener('submit', (event) => {
       event.preventDefault();
+      syncEvolutionMode();
       refreshEvolution();
     });
+    controls?.elements.granularity.addEventListener('change', syncEvolutionMode);
+    controls?.elements.start.addEventListener('change', syncEvolutionMode);
     fullPeriodButton?.addEventListener('click', () => {
       if (!currentEvolution || !controls) return;
       controls.elements.start.value = currentEvolution.starts_at;

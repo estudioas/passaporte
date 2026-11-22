@@ -174,6 +174,7 @@ final class Analytics
         };
         $rangeStart = max($officialStartDate, min($officialEndDate, $parseDate($query['start'] ?? null, $officialStartDate)));
         $rangeEnd = max($rangeStart, min($officialEndDate, $parseDate($query['end'] ?? null, $officialEndDate)));
+        if ($granularity === 'hour') { $rangeEnd = $rangeStart; }
         $selectedStart = $granularity === 'hour' ? max($officialStart, $rangeStart->setTime(0, 0)) : $rangeStart;
         $selectedEndMoment = min($officialEnd, $rangeEnd->setTime(23, 59, 59));
         $selectedEnd = $granularity === 'hour' ? $selectedEndMoment : $rangeEnd;

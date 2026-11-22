@@ -19,8 +19,8 @@
 <p class="analytics-note">As linhas mostram o percentual acumulado desde o início oficial da votação. O período selecionado recorta a visualização sem reiniciar a apuração; votos posteriormente invalidados deixam de compor toda a curva.</p>
 <form class="vote-evolution-controls" data-vote-evolution-controls>
 <label>Modo de visualização<select name="granularity"><option value="day" selected>Evolução diária</option><option value="hour">Evolução por hora</option></select></label>
-<label>De<input type="date" name="start" min="<?= $h($evolution['starts_at']) ?>" max="<?= $h($evolution['ends_at']) ?>" value="<?= $h($evolution['range_start']) ?>"></label>
-<label>Até<input type="date" name="end" min="<?= $h($evolution['starts_at']) ?>" max="<?= $h($evolution['ends_at']) ?>" value="<?= $h($evolution['range_end']) ?>"></label>
+<label data-vote-evolution-start><span data-vote-evolution-start-label>De</span><input type="date" name="start" min="<?= $h($evolution['starts_at']) ?>" max="<?= $h($evolution['ends_at']) ?>" value="<?= $h($evolution['range_start']) ?>"></label>
+<label data-vote-evolution-end>Até<input type="date" name="end" min="<?= $h($evolution['starts_at']) ?>" max="<?= $h($evolution['ends_at']) ?>" value="<?= $h($evolution['range_end']) ?>"></label>
 <button class="button secondary small" type="submit">Aplicar período</button><button class="vote-evolution-full" type="button" data-vote-evolution-full>Período completo</button>
 </form>
 <div class="vote-evolution-total"><span>Total de votos válidos na votação</span><strong data-vote-evolution-total><?= $n($evolution['overall_total']) ?></strong><small><?= date('d/m/Y', strtotime($evolution['starts_at'])) ?> a <?= date('d/m/Y', strtotime($evolution['ends_at'])) ?></small></div>
