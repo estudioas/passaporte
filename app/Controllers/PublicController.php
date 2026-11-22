@@ -92,14 +92,15 @@ final class PublicController
 
     public function results(): void
     {
-        if (!Settings::bool('public_ranking_enabled', false) && !Auth::user()) {
+        $awaitingPreview = ($_GET['preview'] ?? '') === 'awaiting';
+        if (!Settings::bool('public_ranking_enabled', false) && !Auth::user() && !$awaitingPreview) {
             http_response_code(404);
             View::render('404', ['title' => 'Página indisponível']);
             return;
         }
         $this->logPageView('results');
         $mode = Campaign::resultsPhase();
-        if (Auth::user() && ($_GET['preview'] ?? '') === 'awaiting') {
+        if ($awaitingPreview) {
             $mode = 'awaiting';
         }
         View::render('results', [
