@@ -20,7 +20,7 @@
     </figure>
 </section>
 <section class="public-results" data-live-public-results data-results-mode="<?= $h($mode) ?>">
-    <header class="public-results-heading"><div><span class="passport-eyebrow">Visão nacional</span><h2><?= $mode === 'final' ? 'Resultado final' : 'Percentual geral' ?></h2></div><small><?= $mode === 'final' ? 'Apuração encerrada · ' : 'Atualizado automaticamente · ' ?><span data-public-results-updated><?= $mode === 'final' ? '14/12/2026, às 12h' : 'agora' ?></span></small></header>
+    <header class="public-results-heading"><div><span class="passport-eyebrow dark">Parcial <span class="tag-keyword">nacional</span></span><h2><?= $mode === 'final' ? 'Resultado final' : 'Percentual geral' ?></h2></div><small><?= $mode === 'final' ? 'Apuração encerrada · ' : 'Atualizado automaticamente · ' ?><span data-public-results-updated><?= $mode === 'final' ? '14/12/2026, às 12h' : 'agora' ?></span></small></header>
     <div class="public-ranking-list" data-public-ranking>
         <?php foreach ($ranking as $i => $row): ?><article class="public-ranking-row" data-ranking-id="<?= (int) $row['id'] ?>"><span><?= $i + 1 ?>º</span><div><strong><?= $h($row['project_title']) ?></strong><small><?= $h($row['participant_name']) ?></small><i><b style="width:<?= (float) $row['percentage'] ?>%"></b></i><?php if ($mode === 'final'): ?><small class="public-absolute" data-public-absolute><?= number_format((int) $row['votes'], 0, ',', '.') ?> votos válidos</small><?php endif; ?></div><em><?= number_format((float) $row['percentage'], 1, ',', '.') ?>%</em></article><?php endforeach; ?>
     </div>
