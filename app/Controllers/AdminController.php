@@ -679,31 +679,6 @@ final class AdminController
         Response::json(['ok' => true, 'evolution' => Analytics::voteEvolution($_GET)]);
     }
 
-    public function databaseHealth(): never
-    {
-        Auth::requireAdministrator();
-        header('Cache-Control: no-store, private');
-        $pdo = Database::connection();
-        $expected = [
-            'votes' => ['id','finalist_id','audit_event_id','receipt_code','device_hash','visitor_hash','ip_hash','user_agent_hash','country_code','risk_score','risk_signals_json','status','review_notes','reviewed_by','reviewed_at','confirmed_at'],
-            'audit_events' => ['id','event_type','actor_type','actor_id','visitor_hash','device_hash','ip_hash','user_agent_hash','country_code','request_method','request_path','risk_score','metadata_json','previous_hash','entry_hash','created_at'],
-            'finalists' => ['id','slug','participant_name','project_title','active','sort_order'],
-            'audit_chain_state' => ['id','last_event_id','last_hash','updated_at'],
-        ];
-        $tables = [];
-        foreach ($expected as $table => $columns) {
-            $actual = array_column($pdo->query('SHOW COLUMNS FROM `' . $table . '`')->fetchAll(), 'Field');
-            $tables[$table] = ['exists' => true, 'missing_columns' => array_values(array_diff($columns, $actual)), 'columns' => count($actual)];
-        }
-        $indexes = $pdo->query('SHOW INDEX FROM votes')->fetchAll();
-        $unique = [];
-        foreach ($indexes as $index) {
-            if ((int) $index['Non_unique'] === 0) { $unique[] = (string) $index['Column_name']; }
-        }
-        $chain = (int) $pdo->query('SELECT COUNT(*) FROM audit_chain_state WHERE id = 1')->fetchColumn();
-        Response::json(['ok' => true, 'tables' => $tables, 'unique_vote_columns' => array_values(array_unique($unique)), 'audit_chain_ready' => $chain === 1]);
-    }
-
     private static function pagination(int $total, string $key, int $size = 50): array
     {
         $pages = max(1, (int) ceil($total / $size));
