@@ -223,7 +223,7 @@ final class Analytics
             }
             $points[] = [
                 'date' => $cursor->format($granularity === 'hour' ? 'Y-m-d H:00:00' : 'Y-m-d'),
-                'label' => $cursor->format($granularity === 'hour' ? 'd/m H\h' : 'd/m'),
+                'label' => $cursor->format($granularity === 'hour' ? 'H\h' : 'd/m'),
                 'total' => $total,
                 'future' => $cursor > $currentBucket,
                 'candidates' => $candidates,

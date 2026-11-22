@@ -348,7 +348,7 @@
         svg.append(svgNode('text', {x: bounds.left - 12, y: y + 4, 'text-anchor': 'end', class: 'vote-axis-label'}, `${value}%`));
       });
 
-      const labelEvery = data.granularity === 'day' ? 1 : Math.max(1, Math.ceil(data.days.length / 16));
+      const labelEvery = data.granularity === 'day' || data.days.length <= 24 ? 1 : Math.max(1, Math.ceil(data.days.length / 24));
       data.days.forEach((day, index) => {
         if (index % labelEvery !== 0 && index !== data.days.length - 1) return;
         const x = bounds.left + (data.days.length === 1 ? plotWidth / 2 : index * plotWidth / (data.days.length - 1));
@@ -409,7 +409,10 @@
       syncEvolutionMode();
       refreshEvolution();
     });
-    controls?.elements.granularity.addEventListener('change', syncEvolutionMode);
+    controls?.elements.granularity.addEventListener('change', () => {
+      syncEvolutionMode();
+      refreshEvolution();
+    });
     controls?.elements.start.addEventListener('change', syncEvolutionMode);
     fullPeriodButton?.addEventListener('click', () => {
       if (!currentEvolution || !controls) return;
