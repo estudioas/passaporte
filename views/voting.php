@@ -25,7 +25,8 @@ $defaultImages = [
 
 <section id="votacao" class="passport-vote-section" aria-labelledby="finalistas-title">
     <div class="passport-section-heading">
-        <div><span class="passport-eyebrow dark"><span class="tag-keyword">Votação</span> Popular</span><h2 id="finalistas-title">Qual projeto merece o seu voto?</h2></div>
+        <span class="passport-eyebrow dark"><span class="tag-keyword">Votação</span> Popular</span>
+        <h2 id="finalistas-title">Qual projeto merece o seu voto?</h2>
         <p>A ordem de exibição dos finalistas muda a cada visita à página para garantir uma escolha justa. Analise os projetos e vote no seu preferido.</p>
     </div>
 
