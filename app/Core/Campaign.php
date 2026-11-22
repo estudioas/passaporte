@@ -27,4 +27,19 @@ final class Campaign
         return $now >= new DateTimeImmutable((string) Config::get('campaign.registration_starts_at'))
             && $now <= new DateTimeImmutable((string) Config::get('campaign.registration_ends_at'));
     }
+
+    public static function resultsPhase(): string
+    {
+        $now = new DateTimeImmutable('now');
+        $votingEnds = new DateTimeImmutable((string) Config::get('campaign.voting_ends_at'));
+        $cutoff = $votingEnds->setTime(12, 0, 0);
+        $publishesAt = new DateTimeImmutable((string) Config::get(
+            'campaign.result_publishes_at',
+            (string) Config::get('campaign.result_deadline', '2026-12-14') . ' 12:00:00'
+        ));
+        if ($now >= $publishesAt) {
+            return 'final';
+        }
+        return $now >= $cutoff ? 'awaiting' : 'live';
+    }
 }

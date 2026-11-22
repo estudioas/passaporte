@@ -26,6 +26,7 @@ return [
         'voting_starts_at' => '2026-11-25 00:00:00',
         'voting_ends_at' => '2026-12-11 23:59:59',
         'result_deadline' => '2026-12-14',
+        'result_publishes_at' => '2026-12-14 12:00:00',
     ],
     'security' => [
         // A hospedagem compartilhada Hostinger fornece GEOIP_COUNTRY_CODE com GeoIPEnable On.

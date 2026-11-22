@@ -601,8 +601,23 @@
     window.setInterval(refreshAdminRanking, 15000);
   }
 
+  const waitingResults = document.querySelector('.results-waiting[data-results-mode]');
+  if (waitingResults) {
+    const refreshWaitingPhase = async () => {
+      try {
+        const response = await fetch('/api/resultados', { credentials: 'same-origin', cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data.ok && data.mode !== waitingResults.dataset.resultsMode) window.location.reload();
+      } catch (_) { /* Mantém o aviso e tenta novamente no próximo ciclo. */ }
+    };
+    window.setInterval(refreshWaitingPhase, 15000);
+  }
+
   const publicResults = document.querySelector('[data-live-public-results]');
   if (publicResults) {
+    const currentMode = publicResults.dataset.resultsMode || 'live';
+    const integer = new Intl.NumberFormat('pt-BR');
     const decimal = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     const mapSection = publicResults.querySelector('[data-public-regional-map]');
     const mapRoot = mapSection?.querySelector('[data-public-brazil-map]');
@@ -671,6 +686,8 @@
         row.querySelector(':scope > span').textContent = `${index + 1}º`;
         row.querySelector('em').textContent = `${decimal.format(candidate.percentage)}%`;
         row.querySelector('i b').style.width = `${candidate.percentage}%`;
+        const absolute = row.querySelector('[data-public-absolute]');
+        if (absolute && Number.isFinite(Number(candidate.votes))) absolute.textContent = `${integer.format(candidate.votes)} votos válidos`;
         list.appendChild(row);
       });
     };
@@ -683,6 +700,10 @@
         if (!response.ok) return;
         const data = await response.json();
         if (!data.ok) return;
+        if (data.mode !== currentMode) {
+          window.location.reload();
+          return;
+        }
         updatePublicRanking(data.ranking);
         regionalData = data.regional;
         renderRegion(regionalData.macroregions?.[selectedRegion] ? selectedRegion : Object.keys(regionalData.macroregions || {})[0]);

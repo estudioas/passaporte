@@ -86,7 +86,7 @@ final class PublicController
             'finalists' => $finalists,
             'ranking' => $ranking,
             'votingOpen' => Campaign::isVotingOpen() && count($finalists) >= 3,
-            'rankingEnabled' => Settings::bool('public_ranking_enabled', false),
+            'rankingEnabled' => Settings::bool('public_ranking_enabled', false) && Campaign::resultsPhase() === 'live',
         ]);
     }
 
@@ -98,11 +98,13 @@ final class PublicController
             return;
         }
         $this->logPageView('results');
+        $mode = Campaign::resultsPhase();
         View::render('results', [
-            'title' => 'Resultado parcial da votação',
+            'title' => $mode === 'final' ? 'Resultado final da votação' : ($mode === 'awaiting' ? 'Resultado em apuração' : 'Resultado parcial da votação'),
             'description' => 'Acompanhe os percentuais da votação popular do Passaporte Ruffino, inclusive por região do Brasil.',
-            'ranking' => $this->ranking(),
-            'regional' => $this->publicRegionalResults(),
+            'mode' => $mode,
+            'ranking' => $mode === 'awaiting' ? [] : $this->ranking($mode === 'final'),
+            'regional' => $mode === 'awaiting' ? [] : $this->publicRegionalResults(),
         ]);
     }
 
@@ -112,9 +114,14 @@ final class PublicController
             Response::json(['ok' => false], 404);
         }
         header('Cache-Control: no-store, public');
+        $mode = Campaign::resultsPhase();
+        if ($mode === 'awaiting') {
+            Response::json(['ok' => true, 'mode' => $mode, 'updated_at' => date('H:i:s')]);
+        }
         Response::json([
             'ok' => true,
-            'ranking' => $this->ranking(),
+            'mode' => $mode,
+            'ranking' => $this->ranking($mode === 'final'),
             'regional' => $this->publicRegionalResults(),
             'updated_at' => date('H:i:s'),
         ]);
@@ -482,7 +489,7 @@ final class PublicController
         View::render('audit-public', ['title' => 'Auditoria da votação', 'receipt' => $receipt, 'result' => $result]);
     }
 
-    private function ranking(): array
+    private function ranking(bool $includeVotes = false): array
     {
         $rows = Database::connection()->query(
             'SELECT f.id, f.participant_name, f.project_title, COUNT(v.id) AS votes '
@@ -492,7 +499,11 @@ final class PublicController
         $total = array_sum(array_map(static fn (array $row): int => (int) $row['votes'], $rows));
         foreach ($rows as &$row) {
             $row['percentage'] = $total > 0 ? round(((int) $row['votes'] / $total) * 100, 1) : 0.0;
-            unset($row['votes']);
+            if ($includeVotes) {
+                $row['votes'] = (int) $row['votes'];
+            } else {
+                unset($row['votes']);
+            }
         }
         return $rows;
     }
