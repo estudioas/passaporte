@@ -150,3 +150,7 @@
 .voting-hero h1,.passport-vote-section .passport-section-heading h2{text-transform:none}
 .candidate-image[data-zoom-label]:after{content:attr(data-zoom-label);position:absolute;left:14px;bottom:14px;z-index:4;padding:7px 10px;border-radius:4px;background:#8e281f;color:#fff;font-size:12px;font-weight:700;line-height:1.2;opacity:0;transform:translateY(4px);transition:opacity .16s ease,transform .16s ease;pointer-events:none}.candidate-image[data-zoom-label]:hover:after,.candidate-image[data-zoom-label]:focus-visible:after{opacity:1;transform:translateY(0)}
 .candidate-radio{flex:0 0 30px;min-width:30px;min-height:30px;aspect-ratio:1/1}.candidate-meta>div{min-width:0}@media(max-width:1100px){.candidate-grid{grid-template-columns:1fr}}
+
+/* Coluna editorial central: fundos continuam de ponta a ponta, conteúdo não se dispersa em telas largas. */
+:root{--site-gutter:max(clamp(24px,5vw,80px),calc((100vw - 1440px)/2))}
+.campaign-v2 .site-header,.campaign-v2 .site-footer,.campaign-v2 .admin-preview-bar,#conteudo>.passport-hero,#conteudo>.passport-vote-section,#conteudo>.passport-results-section,#conteudo>.campaign-eligibility,#conteudo>.jurors-intro,#conteudo>.jurors-profiles,#conteudo>.jurors-cta,#conteudo>.hero{padding-left:var(--site-gutter);padding-right:var(--site-gutter)}
