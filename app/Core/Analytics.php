@@ -155,70 +155,90 @@ final class Analytics
     }
 
     /**
-     * Cumulative daily result history for the official voting period.
-     * Only currently valid votes and active finalists are included.
+     * Cumulative result history for the official voting period.
+     * A selected range only changes the visible window; totals always accumulate
+     * from the official opening so the curve cannot present a distorted reset.
      */
-    public static function voteEvolution(): array
+    public static function voteEvolution(array $query = []): array
     {
         $pdo = Database::connection();
-        $start = new DateTimeImmutable(substr((string) Config::get('campaign.voting_starts_at'), 0, 10));
-        $end = new DateTimeImmutable(substr((string) Config::get('campaign.voting_ends_at'), 0, 10));
-        $today = new DateTimeImmutable('today');
+        $officialStart = new DateTimeImmutable((string) Config::get('campaign.voting_starts_at'));
+        $officialEnd = new DateTimeImmutable((string) Config::get('campaign.voting_ends_at'));
+        $officialStartDate = new DateTimeImmutable($officialStart->format('Y-m-d'));
+        $officialEndDate = new DateTimeImmutable($officialEnd->format('Y-m-d'));
+        $granularity = ($query['granularity'] ?? '') === 'hour' ? 'hour' : 'day';
+        $parseDate = static function (mixed $value, DateTimeImmutable $fallback): DateTimeImmutable {
+            if (!is_string($value)) { return $fallback; }
+            $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+            return $date && $date->format('Y-m-d') === $value ? $date : $fallback;
+        };
+        $rangeStart = max($officialStartDate, min($officialEndDate, $parseDate($query['start'] ?? null, $officialStartDate)));
+        $rangeEnd = max($rangeStart, min($officialEndDate, $parseDate($query['end'] ?? null, $officialEndDate)));
+        $selectedStart = $granularity === 'hour' ? max($officialStart, $rangeStart->setTime(0, 0)) : $rangeStart;
+        $selectedEndMoment = min($officialEnd, $rangeEnd->setTime(23, 59, 59));
+        $selectedEnd = $granularity === 'hour' ? $selectedEndMoment : $rangeEnd;
+        $currentBucket = new DateTimeImmutable($granularity === 'hour' ? date('Y-m-d H:00:00') : date('Y-m-d'));
+        $bucketExpression = $granularity === 'hour'
+            ? 'DATE_FORMAT(v.confirmed_at, "%Y-%m-%d %H:00:00")'
+            : 'DATE(v.confirmed_at)';
         $finalists = $pdo->query('SELECT id, participant_name, project_title FROM finalists WHERE active = 1 ORDER BY sort_order, id')->fetchAll();
 
-        $stmt = $pdo->prepare('SELECT DATE(v.confirmed_at) AS day, v.finalist_id, COUNT(*) AS votes
+        $stmt = $pdo->prepare('SELECT ' . $bucketExpression . ' AS bucket, v.finalist_id, COUNT(*) AS votes
             FROM votes v
             JOIN finalists f ON f.id = v.finalist_id
             WHERE v.status = "valid" AND f.active = 1 AND v.confirmed_at >= ? AND v.confirmed_at < ?
-            GROUP BY DATE(v.confirmed_at), v.finalist_id ORDER BY day, v.finalist_id');
-        $stmt->execute([$start->format('Y-m-d'), $end->modify('+1 day')->format('Y-m-d')]);
-
-        $daily = [];
+            GROUP BY bucket, v.finalist_id ORDER BY bucket, v.finalist_id');
+        $stmt->execute([$officialStart->format('Y-m-d H:i:s'), $selectedEndMoment->modify('+1 second')->format('Y-m-d H:i:s')]);
+        $buckets = [];
         foreach ($stmt->fetchAll() as $row) {
-            $daily[(string) $row['day']][(int) $row['finalist_id']] = (int) $row['votes'];
+            $buckets[(string) $row['bucket']][(int) $row['finalist_id']] = (int) $row['votes'];
         }
+
+        $totalStmt = $pdo->prepare('SELECT COUNT(*) FROM votes v JOIN finalists f ON f.id = v.finalist_id
+            WHERE v.status = "valid" AND f.active = 1 AND v.confirmed_at >= ? AND v.confirmed_at < ?');
+        $totalStmt->execute([$officialStart->format('Y-m-d H:i:s'), $officialEnd->modify('+1 second')->format('Y-m-d H:i:s')]);
+        $overallTotal = (int) $totalStmt->fetchColumn();
 
         $catalog = [];
         $running = [];
         foreach ($finalists as $finalist) {
             $id = (int) $finalist['id'];
-            $catalog[] = [
-                'id' => $id,
-                'project' => (string) $finalist['project_title'],
-                'participant' => (string) $finalist['participant_name'],
-            ];
+            $catalog[] = ['id' => $id, 'project' => (string) $finalist['project_title'], 'participant' => (string) $finalist['participant_name']];
             $running[$id] = 0;
         }
 
-        $days = [];
-        for ($day = $start; $day <= $end; $day = $day->modify('+1 day')) {
-            $key = $day->format('Y-m-d');
-            foreach ($running as $id => $votes) {
-                $running[$id] += (int) ($daily[$key][$id] ?? 0);
-            }
+        $step = $granularity === 'hour' ? '+1 hour' : '+1 day';
+        $cursor = $granularity === 'hour' ? $officialStart->setTime((int) $officialStart->format('H'), 0) : $officialStartDate;
+        $lastBucket = $granularity === 'hour' ? $selectedEnd->setTime((int) $selectedEnd->format('H'), 0) : $selectedEnd;
+        $points = [];
+        for (; $cursor <= $lastBucket; $cursor = $cursor->modify($step)) {
+            $key = $cursor->format($granularity === 'hour' ? 'Y-m-d H:00:00' : 'Y-m-d');
+            foreach ($running as $id => $votes) { $running[$id] += (int) ($buckets[$key][$id] ?? 0); }
+            if ($cursor < $selectedStart) { continue; }
             $total = array_sum($running);
             $candidates = [];
             foreach ($running as $id => $votes) {
-                $candidates[(string) $id] = [
-                    'votes' => $votes,
-                    'percentage' => $total > 0 ? round($votes * 100 / $total, 2) : 0.0,
-                ];
+                $candidates[(string) $id] = ['votes' => $votes, 'percentage' => $total > 0 ? round($votes * 100 / $total, 2) : 0.0];
             }
-            $days[] = [
-                'date' => $key,
-                'label' => $day->format('d/m'),
+            $points[] = [
+                'date' => $cursor->format($granularity === 'hour' ? 'Y-m-d H:00:00' : 'Y-m-d'),
+                'label' => $cursor->format($granularity === 'hour' ? 'd/m H\h' : 'd/m'),
                 'total' => $total,
-                'future' => $day > $today,
+                'future' => $cursor > $currentBucket,
                 'candidates' => $candidates,
             ];
         }
 
         return [
-            'starts_at' => $start->format('Y-m-d'),
-            'ends_at' => $end->format('Y-m-d'),
+            'starts_at' => $officialStartDate->format('Y-m-d'),
+            'ends_at' => $officialEndDate->format('Y-m-d'),
+            'range_start' => $rangeStart->format('Y-m-d'),
+            'range_end' => $rangeEnd->format('Y-m-d'),
+            'granularity' => $granularity,
+            'overall_total' => $overallTotal,
             'updated_at' => date('H:i:s'),
             'finalists' => $catalog,
-            'days' => $days,
+            'days' => $points,
         ];
     }
 

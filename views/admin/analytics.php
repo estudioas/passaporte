@@ -15,8 +15,15 @@
 </section>
 <?php $regional = $report['regional_votes']; $topState = $regional['top_state']; $topCity = $regional['top_city']; $evolution = $report['vote_evolution']; ?>
 <section class="admin-panel vote-evolution-panel" data-vote-evolution data-evolution-url="/admin/analytics/evolucao-votos">
-<div class="panel-heading"><div><span>Evolução da apuração</span><h2>Curva diária dos resultados</h2></div><small><?= date('d/m/Y', strtotime($evolution['starts_at'])) ?> a <?= date('d/m/Y', strtotime($evolution['ends_at'])) ?></small></div>
-<p class="analytics-note">As linhas mostram o percentual acumulado de cada finalista entre os votos válidos confirmados até cada dia. Votos posteriormente invalidados deixam de compor toda a curva.</p>
+<div class="panel-heading"><div><span>Evolução da apuração</span><h2 data-vote-evolution-heading>Curva diária dos resultados</h2></div><small data-vote-evolution-period><?= date('d/m/Y', strtotime($evolution['range_start'])) ?> a <?= date('d/m/Y', strtotime($evolution['range_end'])) ?></small></div>
+<p class="analytics-note">As linhas mostram o percentual acumulado desde o início oficial da votação. O período selecionado recorta a visualização sem reiniciar a apuração; votos posteriormente invalidados deixam de compor toda a curva.</p>
+<form class="vote-evolution-controls" data-vote-evolution-controls>
+<label>Modo de visualização<select name="granularity"><option value="day" selected>Evolução diária</option><option value="hour">Evolução por hora</option></select></label>
+<label>De<input type="date" name="start" min="<?= $h($evolution['starts_at']) ?>" max="<?= $h($evolution['ends_at']) ?>" value="<?= $h($evolution['range_start']) ?>"></label>
+<label>Até<input type="date" name="end" min="<?= $h($evolution['starts_at']) ?>" max="<?= $h($evolution['ends_at']) ?>" value="<?= $h($evolution['range_end']) ?>"></label>
+<button class="button secondary small" type="submit">Aplicar período</button><button class="vote-evolution-full" type="button" data-vote-evolution-full>Período completo</button>
+</form>
+<div class="vote-evolution-total"><span>Total de votos válidos na votação</span><strong data-vote-evolution-total><?= $n($evolution['overall_total']) ?></strong><small><?= date('d/m/Y', strtotime($evolution['starts_at'])) ?> a <?= date('d/m/Y', strtotime($evolution['ends_at'])) ?></small></div>
 <div class="vote-evolution-legend" data-vote-evolution-legend></div>
 <div class="vote-evolution-chart" role="img" aria-label="Evolução diária dos percentuais acumulados por finalista. Os valores completos estão disponíveis na tabela abaixo.">
 <svg viewBox="0 0 1000 380" preserveAspectRatio="xMidYMid meet" data-vote-evolution-svg aria-hidden="true"></svg>
@@ -24,7 +31,7 @@
 </div>
 <p class="analytics-note vote-evolution-status" data-vote-evolution-status>Atualização automática a cada 30 segundos · <?= $h($evolution['updated_at']) ?></p>
 <script type="application/json" data-vote-evolution-data><?= json_encode($evolution, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
-<details class="vote-evolution-table"><summary>Ver evolução diária em números</summary><div class="table-wrap"><table><thead><tr><th>Dia</th><th>Votos acumulados</th><?php foreach ($evolution['finalists'] as $finalist): ?><th><?= $h($finalist['project']) ?></th><?php endforeach; ?></tr></thead><tbody>
+<details class="vote-evolution-table"><summary>Ver evolução em números</summary><div class="table-wrap"><table data-vote-evolution-table><thead><tr><th>Período</th><th>Votos acumulados</th><?php foreach ($evolution['finalists'] as $finalist): ?><th><?= $h($finalist['project']) ?></th><?php endforeach; ?></tr></thead><tbody>
 <?php foreach ($evolution['days'] as $point): ?><tr><td><?= $h($point['label']) ?><?= $point['future'] ? ' · previsto' : '' ?></td><td><?= $point['future'] ? '—' : $n($point['total']) ?></td><?php foreach ($evolution['finalists'] as $finalist): $candidate = $point['candidates'][(string) $finalist['id']] ?? ['votes' => 0, 'percentage' => 0]; ?><td><?= $point['future'] ? '—' : number_format((float) $candidate['percentage'], 1, ',', '.') . '% · ' . $n($candidate['votes']) . ' votos' ?></td><?php endforeach; ?></tr><?php endforeach; ?>
 </tbody></table></div></details>
 </section>

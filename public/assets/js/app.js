@@ -243,9 +243,16 @@
     const empty = voteEvolutionPanel.querySelector('[data-vote-evolution-empty]');
     const status = voteEvolutionPanel.querySelector('[data-vote-evolution-status]');
     const source = voteEvolutionPanel.querySelector('[data-vote-evolution-data]');
-    const colors = ['#7b1f27', '#bd6d5d', '#514943', '#c79b52', '#626b77'];
+    const controls = voteEvolutionPanel.querySelector('[data-vote-evolution-controls]');
+    const fullPeriodButton = voteEvolutionPanel.querySelector('[data-vote-evolution-full]');
+    const total = voteEvolutionPanel.querySelector('[data-vote-evolution-total]');
+    const heading = voteEvolutionPanel.querySelector('[data-vote-evolution-heading]');
+    const period = voteEvolutionPanel.querySelector('[data-vote-evolution-period]');
+    const table = voteEvolutionPanel.querySelector('[data-vote-evolution-table]');
+    const colors = ['#7b1f2a', '#b77a25', '#386a70', '#c36b4b', '#62527a'];
     const ns = 'http://www.w3.org/2000/svg';
     let pending = false;
+    let currentEvolution = null;
 
     const svgNode = (name, attributes = {}, text = '') => {
       const node = document.createElementNS(ns, name);
@@ -270,11 +277,54 @@
       }
       return path;
     };
+    const formatDate = (value) => {
+      const parts = String(value || '').split('-');
+      return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : value;
+    };
+    const renderEvolutionTable = (data) => {
+      if (!table) return;
+      const head = document.createElement('thead');
+      const headRow = document.createElement('tr');
+      ['Período', 'Votos acumulados', ...(data.finalists || []).map((item) => item.project)].forEach((label) => {
+        const cell = document.createElement('th');
+        cell.textContent = label;
+        headRow.append(cell);
+      });
+      head.append(headRow);
+      const body = document.createElement('tbody');
+      data.days.forEach((point) => {
+        const row = document.createElement('tr');
+        const label = document.createElement('td');
+        label.textContent = `${point.label}${point.future ? ' · previsto' : ''}`;
+        row.append(label);
+        const pointTotal = document.createElement('td');
+        pointTotal.textContent = point.future ? '—' : Number(point.total).toLocaleString('pt-BR');
+        row.append(pointTotal);
+        (data.finalists || []).forEach((finalist) => {
+          const cell = document.createElement('td');
+          const candidate = point.candidates?.[String(finalist.id)] || {percentage: 0, votes: 0};
+          cell.textContent = point.future ? '—' : `${Number(candidate.percentage).toLocaleString('pt-BR', {minimumFractionDigits: 1, maximumFractionDigits: 1})}% · ${Number(candidate.votes).toLocaleString('pt-BR')} votos`;
+          row.append(cell);
+        });
+        body.append(row);
+      });
+      table.replaceChildren(head, body);
+    };
     const renderEvolution = (data) => {
       if (!svg || !legend || !data?.days?.length) return;
+      currentEvolution = data;
+      if (heading) heading.textContent = data.granularity === 'hour' ? 'Curva dos resultados por hora' : 'Curva diária dos resultados';
+      if (period) period.textContent = `${formatDate(data.range_start)} a ${formatDate(data.range_end)}`;
+      if (total) total.textContent = Number(data.overall_total || 0).toLocaleString('pt-BR');
+      if (controls) {
+        controls.elements.granularity.value = data.granularity;
+        controls.elements.start.value = data.range_start;
+        controls.elements.end.value = data.range_end;
+      }
+      renderEvolutionTable(data);
       const width = 1000;
       const height = 380;
-      const bounds = {left: 62, right: 24, top: 22, bottom: 52};
+      const bounds = {left: 62, right: 24, top: 22, bottom: 58};
       const plotWidth = width - bounds.left - bounds.right;
       const plotHeight = height - bounds.top - bounds.bottom;
       svg.replaceChildren();
@@ -286,7 +336,7 @@
         svg.append(svgNode('text', {x: bounds.left - 12, y: y + 4, 'text-anchor': 'end', class: 'vote-axis-label'}, `${value}%`));
       });
 
-      const labelEvery = Math.max(1, Math.ceil(data.days.length / 8));
+      const labelEvery = data.granularity === 'day' ? 1 : Math.max(1, Math.ceil(data.days.length / 16));
       data.days.forEach((day, index) => {
         if (index % labelEvery !== 0 && index !== data.days.length - 1) return;
         const x = bounds.left + (data.days.length === 1 ? plotWidth / 2 : index * plotWidth / (data.days.length - 1));
@@ -329,7 +379,12 @@
       if (document.visibilityState !== 'visible' || pending) return;
       pending = true;
       try {
-        const response = await fetch(voteEvolutionPanel.dataset.evolutionUrl, {credentials: 'same-origin', cache: 'no-store'});
+        const params = new URLSearchParams({
+          granularity: controls?.elements.granularity.value || currentEvolution?.granularity || 'day',
+          start: controls?.elements.start.value || currentEvolution?.range_start || '',
+          end: controls?.elements.end.value || currentEvolution?.range_end || '',
+        });
+        const response = await fetch(`${voteEvolutionPanel.dataset.evolutionUrl}?${params}`, {credentials: 'same-origin', cache: 'no-store'});
         const data = await response.json();
         if (!response.ok || !data.ok) throw new Error('indisponível');
         renderEvolution(data.evolution);
@@ -337,6 +392,16 @@
         if (status) status.textContent = 'Sem atualização ao vivo; tentando novamente…';
       } finally { pending = false; }
     };
+    controls?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      refreshEvolution();
+    });
+    fullPeriodButton?.addEventListener('click', () => {
+      if (!currentEvolution || !controls) return;
+      controls.elements.start.value = currentEvolution.starts_at;
+      controls.elements.end.value = currentEvolution.ends_at;
+      refreshEvolution();
+    });
     setInterval(refreshEvolution, 30000);
     document.addEventListener('visibilitychange', refreshEvolution);
   }

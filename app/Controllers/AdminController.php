@@ -676,7 +676,7 @@ final class AdminController
     {
         Auth::requirePermission('analytics');
         header('Cache-Control: no-store, private');
-        Response::json(['ok' => true, 'evolution' => Analytics::voteEvolution()]);
+        Response::json(['ok' => true, 'evolution' => Analytics::voteEvolution($_GET)]);
     }
 
     private static function pagination(int $total, string $key, int $size = 50): array
