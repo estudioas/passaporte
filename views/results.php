@@ -11,7 +11,7 @@
 <?php else: ?>
 <section class="results-hero">
     <div class="results-hero-copy">
-        <span class="passport-eyebrow"><?= $mode === 'final' ? 'Resultado final' : 'Resultado parcial' ?></span>
+        <span class="passport-eyebrow"><?php if ($mode === 'final'): ?>Resultado final<?php else: ?>Resultado <span class="tag-keyword tag-keyword-light">parcial</span><?php endif; ?></span>
         <h1><?= $mode === 'final' ? 'O projeto escolhido pelo público.' : 'Como está a votação.' ?></h1>
         <p><?php if ($mode === 'final'): ?>Confira o resultado final da votação popular, com os percentuais e os números absolutos de votos válidos.<?php else: ?>Acompanhe em tempo real os percentuais dos votos válidos. Esta página divulgará o resultado em número absoluto somente após o fim da votação.<?php endif; ?></p>
     </div>
@@ -33,6 +33,6 @@
         <div class="public-region-tabs" data-public-region-tabs><?php foreach ($regional['macroregions'] as $region): ?><button type="button" data-public-region="<?= $h($region['name']) ?>"><?= $h($region['name']) ?></button><?php endforeach; ?></div>
     </section>
     <script type="application/json" data-public-regional-data><?= json_encode($regional, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
-    <?php if ($mode === 'live'): ?><section class="public-vote-cta"><span class="passport-eyebrow">Sua escolha</span><h2>Qual projeto merece ir mais longe?</h2><p>Conheça os três finalistas e vote no seu favorito. O voto é individual e, depois de confirmado, não poderá ser alterado.</p><a class="button light" href="/votacao">Votar no meu favorito</a></section><?php endif; ?>
+    <?php if ($mode === 'live'): ?><section class="public-vote-cta"><span class="passport-eyebrow">Sua <span class="tag-keyword tag-keyword-light">escolha</span></span><h2>Qual projeto merece ir mais longe?</h2><p>Conheça os três finalistas e vote no seu favorito. O voto é individual e, depois de confirmado, não poderá ser alterado.</p><a class="button light" href="/votacao">Votar no meu favorito</a></section><?php endif; ?>
 </section>
 <?php endif; ?>
