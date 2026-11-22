@@ -12,7 +12,7 @@
 <section class="results-hero">
     <div class="results-hero-copy">
         <span class="passport-eyebrow"><?php if ($mode === 'final'): ?>Resultado final<?php else: ?>Resultado <span class="tag-keyword tag-keyword-light">parcial</span><?php endif; ?></span>
-        <h1><?= $mode === 'final' ? 'O projeto escolhido pelo público.' : 'Como está a votação.' ?></h1>
+        <h1><?= $mode === 'final' ? 'O projeto escolhido pelo público.' : 'Como está a votação' ?></h1>
         <p><?php if ($mode === 'final'): ?>Confira o resultado final da votação popular, com os percentuais e os números absolutos de votos válidos.<?php else: ?>Acompanhe em tempo real os percentuais dos votos válidos. Esta página divulgará o resultado em número absoluto somente após o fim da votação.<?php endif; ?></p>
         <a class="button light" href="#apuracao-nacional">Acompanhe a apuração</a>
     </div>
