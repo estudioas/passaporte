@@ -3,7 +3,7 @@
 <section class="results-waiting" data-results-mode="awaiting">
     <div>
         <span class="passport-eyebrow">Apuração final</span>
-        <h1>A votação entrou em período de sigilo.</h1>
+        <h1>A votação entrou em sua fase decisiva.</h1>
         <p>Os percentuais parciais foram retirados do ar para preservar os momentos finais da campanha.</p>
         <strong>O resultado final será divulgado ao meio-dia de 14/12/2026.</strong>
     </div>
