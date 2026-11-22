@@ -26,7 +26,8 @@
 </section>
 
 <section class="campaign-eligibility campaign-how-to-vote">
- <div><span class="passport-eyebrow dark">Como <span class="tag-keyword">votar</span></span><h2>Uma escolha simples e individual.</h2></div>
+ <span class="passport-eyebrow dark">Como <span class="tag-keyword">votar</span></span>
+ <h2>Uma escolha simples e individual.</h2>
  <ol>
   <li><strong>Conheça os finalistas.</strong> A ordem dos três projetos muda a cada visita.</li>
   <li><strong>Escolha um projeto.</strong> Você pode trocar a seleção antes de confirmar.</li>
