@@ -86,6 +86,7 @@ $defaultImages = [
         <?php foreach ($ranking as $row): ?>
             <div class="passport-result-row"><div><strong>Projeto <?= $h($row['project_title']) ?></strong><span><?= number_format((float) $row['percentage'], 1, ',', '.') ?>%</span></div><div class="passport-track"><i style="width:<?= (float) $row['percentage'] ?>%"></i></div></div>
         <?php endforeach; ?>
+        <a class="button light" href="/resultados">Ver percentuais por região</a>
     </div>
 </section>
 <?php endif; ?>

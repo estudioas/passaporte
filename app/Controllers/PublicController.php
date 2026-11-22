@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Audit;
+use App\Core\Analytics;
 use App\Core\Auth;
 use App\Core\Campaign;
 use App\Core\Captcha;
@@ -86,6 +87,36 @@ final class PublicController
             'ranking' => $ranking,
             'votingOpen' => Campaign::isVotingOpen() && count($finalists) >= 3,
             'rankingEnabled' => Settings::bool('public_ranking_enabled', false),
+        ]);
+    }
+
+    public function results(): void
+    {
+        if (!Settings::bool('public_ranking_enabled', false) && !Auth::user()) {
+            http_response_code(404);
+            View::render('404', ['title' => 'Página indisponível']);
+            return;
+        }
+        $this->logPageView('results');
+        View::render('results', [
+            'title' => 'Resultado parcial da votação',
+            'description' => 'Acompanhe os percentuais da votação popular do Passaporte Ruffino, inclusive por região do Brasil.',
+            'ranking' => $this->ranking(),
+            'regional' => $this->publicRegionalResults(),
+        ]);
+    }
+
+    public function liveResults(): never
+    {
+        if (!Settings::bool('public_ranking_enabled', false) && !Auth::user()) {
+            Response::json(['ok' => false], 404);
+        }
+        header('Cache-Control: no-store, public');
+        Response::json([
+            'ok' => true,
+            'ranking' => $this->ranking(),
+            'regional' => $this->publicRegionalResults(),
+            'updated_at' => date('H:i:s'),
         ]);
     }
 
@@ -464,6 +495,45 @@ final class PublicController
             unset($row['votes']);
         }
         return $rows;
+    }
+
+    private function publicRegionalResults(): array
+    {
+        $start = substr((string) Config::get('campaign.voting_starts_at'), 0, 10);
+        $end = substr((string) Config::get('campaign.voting_ends_at'), 0, 10);
+        $regional = Analytics::regionalVotes([
+            'start' => $start,
+            'end' => $end,
+            'until' => date('Y-m-d', strtotime($end . ' +1 day')),
+        ]);
+        $macroregions = [];
+        foreach ($regional['macroregions'] as $macro) {
+            $candidates = array_map(static fn (array $candidate): array => [
+                'id' => (int) $candidate['id'],
+                'project' => (string) $candidate['project'],
+                'participant' => (string) $candidate['participant'],
+                'percentage' => (float) $candidate['percentage'],
+            ], $macro['candidates']);
+            $macroregions[(string) $macro['name']] = [
+                'name' => (string) $macro['name'],
+                'candidates' => $candidates,
+                'leader' => $macro['leader'] ? [
+                    'id' => (int) $macro['leader']['id'],
+                    'project' => (string) $macro['leader']['project'],
+                    'percentage' => (float) $macro['leader']['percentage'],
+                ] : null,
+                'tie' => (bool) $macro['tie'],
+            ];
+        }
+        $states = [];
+        foreach ($regional['states'] as $state) {
+            $states[(string) $state['uf']] = [
+                'uf' => (string) $state['uf'],
+                'name' => (string) $state['name'],
+                'macroregion' => (string) $state['macroregion'],
+            ];
+        }
+        return ['macroregions' => $macroregions, 'states' => $states];
     }
 
     private function logPageView(string $page): void

@@ -160,12 +160,12 @@ final class Analytics
     public static function regionalVotes(array $range): array
     {
         $pdo = Database::connection();
-        $finalists = $pdo->query('SELECT id, participant_name, project_title FROM finalists ORDER BY sort_order, id')->fetchAll();
+        $finalists = $pdo->query('SELECT id, participant_name, project_title FROM finalists WHERE active = 1 ORDER BY sort_order, id')->fetchAll();
         $stmt = $pdo->prepare('SELECT v.finalist_id, f.participant_name, f.project_title, a.metadata_json
             FROM votes v
             JOIN finalists f ON f.id = v.finalist_id
             LEFT JOIN audit_events a ON a.id = v.audit_event_id
-            WHERE v.status = "valid" AND v.country_code = "BR" AND v.confirmed_at >= ? AND v.confirmed_at < ?');
+            WHERE v.status = "valid" AND v.country_code = "BR" AND f.active = 1 AND v.confirmed_at >= ? AND v.confirmed_at < ?');
         $stmt->execute([$range['start'], $range['until']]);
 
         $states = [];

@@ -20,7 +20,7 @@ $path = $path === '/' ? '/' : rtrim($path, '/');
 $public = new PublicController();
 $admin = new AdminController();
 
-if (!in_array($path, ['/api/analytics/presence', '/admin/analytics/online'], true) && !str_starts_with($path, '/media/finalistas/')) {
+if (!in_array($path, ['/api/analytics/presence', '/api/resultados', '/admin/analytics/online', '/admin/api/ranking'], true) && !str_starts_with($path, '/media/finalistas/')) {
 Audit::log(
     'http.request',
     [
@@ -39,6 +39,8 @@ $routes = [
     'GET' => [
         '/' => [$public, 'home'],
         '/votacao' => [$public, 'voting'],
+        '/resultados' => [$public, 'results'],
+        '/api/resultados' => [$public, 'liveResults'],
         '/jurados' => [$public, 'jurors'],
         '/inscricoes' => static fn () => \App\Core\Response::redirect('https://www.ruffinoacabamentos.com/passaporte-revestir'),
         '/regulamento/profissionais' => static fn () => $public->regulations('profissionais'),
@@ -50,6 +52,7 @@ $routes = [
         '/admin/analytics/exportar' => [$admin, 'exportAnalytics'],
         '/admin/analytics/online' => [$admin, 'online'],
         '/admin' => [$admin, 'dashboard'],
+        '/admin/api/ranking' => [$admin, 'liveRanking'],
         '/admin/finalistas' => [$admin, 'finalists'],
         '/admin/auditoria' => [$admin, 'audit'],
         '/admin/auditoria/exportar' => [$admin, 'exportAudit'],

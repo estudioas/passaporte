@@ -70,9 +70,10 @@ final class AdminController
         $total = array_sum(array_map(static fn (array $row): int => (int) $row['vote_count'], $ranking));
         foreach ($ranking as &$row) {
             $row['percentage'] = $total > 0 ? round(((int) $row['vote_count'] / $total) * 100, 1) : 0;
-            unset($row['vote_count']);
         }
+        unset($row);
         $metrics = [
+            'valid_votes' => $total,
             'accesses_24h' => (int) $pdo->query('SELECT COUNT(*) FROM audit_events WHERE event_type = "http.request" AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)')->fetchColumn(),
             'review_queue' => (int) $pdo->query('SELECT COUNT(*) FROM votes WHERE status = "review"')->fetchColumn(),
             'high_risk_24h' => (int) $pdo->query('SELECT COUNT(*) FROM audit_events WHERE risk_score >= 60 AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)')->fetchColumn(),
@@ -82,6 +83,25 @@ final class AdminController
         $online = $analyticsReady ? Analytics::online() : null;
         $recent = $pdo->query('SELECT id, event_type, actor_type, country_code, risk_score, request_path, created_at FROM audit_events ORDER BY id DESC LIMIT 20')->fetchAll();
         View::render('admin/dashboard', compact('user', 'ranking', 'metrics', 'recent', 'online') + ['title' => 'Visão geral'], 'admin/layout');
+    }
+
+    public function liveRanking(): never
+    {
+        Auth::requirePermission('audit');
+        header('Cache-Control: no-store, private');
+        $rows = Database::connection()->query(
+            'SELECT f.id, f.participant_name, f.project_title, COUNT(v.id) AS vote_count '
+            . 'FROM finalists f LEFT JOIN votes v ON v.finalist_id = f.id AND v.status = "valid" '
+            . 'WHERE f.active = 1 GROUP BY f.id ORDER BY vote_count DESC, f.id ASC'
+        )->fetchAll();
+        $total = array_sum(array_map(static fn (array $row): int => (int) $row['vote_count'], $rows));
+        foreach ($rows as &$row) {
+            $row['id'] = (int) $row['id'];
+            $row['vote_count'] = (int) $row['vote_count'];
+            $row['percentage'] = $total > 0 ? round($row['vote_count'] * 100 / $total, 1) : 0.0;
+        }
+        unset($row);
+        Response::json(['ok' => true, 'total' => $total, 'ranking' => $rows, 'updated_at' => date('H:i:s')]);
     }
 
     public function finalists(): void

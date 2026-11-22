@@ -571,4 +571,125 @@
     }));
     if (selectedUf) renderState(selectedUf);
   }
+
+  const adminLiveRanking = document.querySelector('[data-live-admin-ranking]');
+  if (adminLiveRanking) {
+    const integer = new Intl.NumberFormat('pt-BR');
+    const decimal = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const refreshAdminRanking = async () => {
+      try {
+        const response = await fetch('/admin/api/ranking', { credentials: 'same-origin', cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!data.ok) return;
+        const list = adminLiveRanking.querySelector('.ranking-list');
+        data.ranking.forEach((candidate, index) => {
+          const row = list?.querySelector(`[data-ranking-id="${candidate.id}"]`);
+          if (!row) return;
+          row.querySelector('[data-rank-position]').textContent = `${index + 1}º`;
+          row.querySelector('[data-rank-percentage]').textContent = `${decimal.format(candidate.percentage)}%`;
+          row.querySelector('[data-rank-votes]').textContent = `${integer.format(candidate.vote_count)} votos`;
+          row.querySelector('.rank-track i').style.width = `${candidate.percentage}%`;
+          list.appendChild(row);
+        });
+        const total = document.querySelector('[data-admin-valid-total]');
+        if (total) total.textContent = integer.format(data.total);
+        const updated = adminLiveRanking.querySelector('[data-ranking-updated]');
+        if (updated) updated.textContent = `Atualizado às ${data.updated_at}`;
+      } catch (_) { /* Mantém a última apuração disponível. */ }
+    };
+    window.setInterval(refreshAdminRanking, 15000);
+  }
+
+  const publicResults = document.querySelector('[data-live-public-results]');
+  if (publicResults) {
+    const decimal = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const mapSection = publicResults.querySelector('[data-public-regional-map]');
+    const mapRoot = mapSection?.querySelector('[data-public-brazil-map]');
+    const nameNode = mapSection?.querySelector('[data-public-region-name]');
+    const kickerNode = mapSection?.querySelector('[data-public-region-kicker]');
+    const summaryNode = mapSection?.querySelector('[data-public-region-summary]');
+    const candidatesNode = mapSection?.querySelector('[data-public-region-candidates]');
+    let regionalData = {};
+    let selectedRegion = 'Sudeste';
+    try { regionalData = JSON.parse(publicResults.querySelector('[data-public-regional-data]')?.textContent || '{}'); } catch (_) {}
+    const regionColors = { 'Norte': '#9d554f', 'Nordeste': '#c97b6d', 'Centro-Oeste': '#76241f', 'Sudeste': '#a7342b', 'Sul': '#d9a49b' };
+    const clear = (node) => { while (node?.firstChild) node.removeChild(node.firstChild); };
+    const renderRegion = (regionName) => {
+      const region = regionalData.macroregions?.[regionName];
+      if (!region) return;
+      selectedRegion = regionName;
+      kickerNode.textContent = 'Percentuais regionais';
+      nameNode.textContent = region.name;
+      summaryNode.textContent = region.tie ? 'Há empate na liderança nesta região.' : (region.leader ? `${region.leader.project} lidera com ${decimal.format(region.leader.percentage)}%.` : 'Ainda não há votos válidos localizados nesta região.');
+      clear(candidatesNode);
+      region.candidates.forEach((candidate) => {
+        const row = document.createElement('div');
+        row.className = 'public-region-candidate';
+        const head = document.createElement('div');
+        const title = document.createElement('strong');
+        title.textContent = candidate.project;
+        const value = document.createElement('b');
+        value.textContent = `${decimal.format(candidate.percentage)}%`;
+        head.append(title, value);
+        const track = document.createElement('span');
+        const fill = document.createElement('i');
+        fill.style.width = `${Math.max(0, Math.min(100, Number(candidate.percentage) || 0))}%`;
+        track.appendChild(fill);
+        row.append(head, track);
+        candidatesNode.appendChild(row);
+      });
+      mapSection.querySelectorAll('[data-public-region]').forEach((button) => button.classList.toggle('is-active', button.dataset.publicRegion === regionName));
+      mapRoot?.querySelectorAll('[data-public-map-state]').forEach((shape) => shape.classList.toggle('is-active', shape.dataset.region === regionName));
+    };
+    const preparePublicMap = () => {
+      Object.values(regionalData.states || {}).forEach((state) => {
+        const shape = mapRoot?.querySelector(`#${state.uf}`);
+        if (!shape) return;
+        shape.style.fill = regionColors[state.macroregion] || '#ddd4ca';
+        shape.dataset.region = state.macroregion;
+        shape.setAttribute('data-public-map-state', '');
+        shape.setAttribute('tabindex', '0');
+        shape.setAttribute('role', 'button');
+        shape.setAttribute('aria-label', `${state.name}, região ${state.macroregion}`);
+        const select = () => renderRegion(state.macroregion);
+        shape.addEventListener('mouseenter', select);
+        shape.addEventListener('focus', select);
+        shape.addEventListener('click', select);
+        shape.addEventListener('keydown', (event) => {
+          if (!['Enter', ' '].includes(event.key)) return;
+          event.preventDefault();
+          select();
+        });
+      });
+    };
+    const updatePublicRanking = (ranking) => {
+      const list = publicResults.querySelector('[data-public-ranking]');
+      ranking.forEach((candidate, index) => {
+        const row = list?.querySelector(`[data-ranking-id="${candidate.id}"]`);
+        if (!row) return;
+        row.querySelector(':scope > span').textContent = `${index + 1}º`;
+        row.querySelector('em').textContent = `${decimal.format(candidate.percentage)}%`;
+        row.querySelector('i b').style.width = `${candidate.percentage}%`;
+        list.appendChild(row);
+      });
+    };
+    preparePublicMap();
+    mapSection?.querySelectorAll('[data-public-region]').forEach((button) => button.addEventListener('click', () => renderRegion(button.dataset.publicRegion)));
+    renderRegion(regionalData.macroregions?.[selectedRegion] ? selectedRegion : Object.keys(regionalData.macroregions || {})[0]);
+    const refreshPublicResults = async () => {
+      try {
+        const response = await fetch('/api/resultados', { credentials: 'same-origin', cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!data.ok) return;
+        updatePublicRanking(data.ranking);
+        regionalData = data.regional;
+        renderRegion(regionalData.macroregions?.[selectedRegion] ? selectedRegion : Object.keys(regionalData.macroregions || {})[0]);
+        const updated = publicResults.querySelector('[data-public-results-updated]');
+        if (updated) updated.textContent = data.updated_at;
+      } catch (_) { /* Mantém os últimos percentuais exibidos. */ }
+    };
+    window.setInterval(refreshPublicResults, 15000);
+  }
 })();
