@@ -17,8 +17,12 @@
 <section class="admin-panel regional-votes-panel" id="mapa-votos" data-regional-map>
 <div class="panel-heading"><div><span>Auditoria geográfica dos votos</span><h2>Origem e liderança por região</h2></div><small>Somente votos válidos do Brasil · <?= $h($range['start']) ?> a <?= $h($range['end']) ?></small></div>
 <p class="analytics-note">A localização corresponde à UF e à cidade informadas pela infraestrutura de rede no momento da confirmação. O mapa não expõe endereços IP e não altera a apuração.</p>
+<div class="analytics-vote-overview">
+<div class="panel-heading"><div><span>Apuração geral no período</span><h3><?= $n($regional['national']['total']) ?> votos válidos</h3></div><small>Valores absolutos e percentuais</small></div>
+<div class="ranking-list compact"><?php foreach ($regional['national']['candidates'] as $i => $candidate): ?><div class="ranking-row"><span class="rank-position"><?= $i + 1 ?>º</span><div><strong><?= $h($candidate['project']) ?></strong><span><?= $h($candidate['participant']) ?></span><div class="rank-track"><i style="width:<?= (float) $candidate['percentage'] ?>%"></i></div></div><b><span><?= number_format((float) $candidate['percentage'], 1, ',', '.') ?>%</span><small><?= $n($candidate['votes']) ?> votos</small></b></div><?php endforeach; ?></div>
+</div>
 <div class="regional-summary">
-<article><span>Votos válidos localizados</span><strong><?= $n($regional['located']) ?></strong><small><?= $n($regional['unlocated']) ?> sem UF identificada</small></article>
+<article><span>Votos válidos no período</span><strong><?= $n($regional['total']) ?></strong><small><?= $n($regional['located']) ?> com UF · <?= $n($regional['unlocated']) ?> sem UF</small></article>
 <article><span>Estado com mais votos</span><strong><?= $topState ? $h($topState['name']) : '—' ?></strong><small><?= $topState ? $n($topState['total']) . ' votos válidos' : 'Ainda sem dados' ?></small></article>
 <article><span>Cidade com mais votos</span><strong><?= $topCity ? $h($topCity['name']) : '—' ?></strong><small><?= $topCity ? $h($topCity['uf']) . ' · ' . $n($topCity['total']) . ' votos válidos' : 'Ainda sem dados' ?></small></article>
 </div>

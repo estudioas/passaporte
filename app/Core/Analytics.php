@@ -170,6 +170,7 @@ final class Analytics
 
         $states = [];
         $macroregions = [];
+        $national = ['name' => 'Brasil', 'total' => 0, 'votes' => []];
         $unlocated = 0;
         $total = 0;
         foreach ($stmt->fetchAll() as $row) {
@@ -178,6 +179,8 @@ final class Analytics
             $city = self::normalizeCity((string) ($metadata['geo_city'] ?? ''));
             $finalistId = (int) $row['finalist_id'];
             $total++;
+            $national['total']++;
+            $national['votes'][$finalistId] = ($national['votes'][$finalistId] ?? 0) + 1;
             if ($uf === '') {
                 $unlocated++;
                 continue;
@@ -226,6 +229,7 @@ final class Analytics
         unset($state);
         foreach ($macroregions as &$macro) { $macro = self::finishRegion($macro, $catalog); }
         unset($macro);
+        $national = self::finishRegion($national, $catalog);
         uasort($states, static fn (array $a, array $b): int => $b['total'] <=> $a['total'] ?: strcmp($a['name'], $b['name']));
         uasort($macroregions, static fn (array $a, array $b): int => $b['total'] <=> $a['total'] ?: strcmp($a['name'], $b['name']));
 
@@ -242,6 +246,7 @@ final class Analytics
             'total' => $total,
             'located' => $total - $unlocated,
             'unlocated' => $unlocated,
+            'national' => $national,
             'states' => $states,
             'macroregions' => $macroregions,
             'top_state' => $topState,
