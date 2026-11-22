@@ -1,8 +1,14 @@
 <?php use App\Core\Security; $h = [Security::class, 'h']; ?>
 <section class="results-hero">
-    <span class="passport-eyebrow">Resultado parcial</span>
-    <h1>Como está a votação.</h1>
-    <p>Acompanhe os percentuais dos votos válidos. Esta página não divulga quantidades absolutas e é atualizada automaticamente.</p>
+    <div class="results-hero-copy">
+        <span class="passport-eyebrow">Resultado parcial</span>
+        <h1>Como está a votação.</h1>
+        <p>Acompanhe os percentuais dos votos válidos. Esta página não divulga quantidades absolutas e é atualizada automaticamente.</p>
+    </div>
+    <figure class="results-hero-art">
+        <img src="/assets/img/resultados-materiais-apuracao.jpg" width="1536" height="1024" alt="Composição conceitual com amostras de madeira e pedra, planta arquitetônica e elementos gráficos de votação e apuração">
+        <figcaption>Imagem conceitual criada com texturas de materiais Ruffino.</figcaption>
+    </figure>
 </section>
 <section class="public-results" data-live-public-results>
     <header class="public-results-heading"><div><span class="passport-eyebrow">Visão nacional</span><h2>Percentual geral</h2></div><small>Atualizado automaticamente · <span data-public-results-updated>agora</span></small></header>
