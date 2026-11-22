@@ -69,6 +69,7 @@ $defaultImages = [
         <p><span aria-hidden="true">◇</span> Voto individual e único. Sinais técnicos são usados somente para validar a participação e prevenir fraude.</p>
         <button class="passport-vote-button" type="button" data-submit-vote disabled>Confirmar meu voto</button>
     </div>
+    <p class="vote-integrity-note">É permitido um único voto por participante. Tentativas de votar novamente por outro navegador, dispositivo ou rede violam as regras da campanha, são registradas para auditoria e podem resultar na invalidação dos votos envolvidos.</p>
     <p class="vote-period-status"><?= $votingOpen ? 'Votação aberta até 11/12/2026, às 23h59 (horário de Brasília).' : 'Votação disponível de 25/11/2026 a 11/12/2026.' ?></p>
 </section>
 
