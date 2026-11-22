@@ -14,12 +14,13 @@
         <span class="passport-eyebrow"><?php if ($mode === 'final'): ?>Resultado final<?php else: ?>Resultado <span class="tag-keyword tag-keyword-light">parcial</span><?php endif; ?></span>
         <h1><?= $mode === 'final' ? 'O projeto escolhido pelo público.' : 'Como está a votação.' ?></h1>
         <p><?php if ($mode === 'final'): ?>Confira o resultado final da votação popular, com os percentuais e os números absolutos de votos válidos.<?php else: ?>Acompanhe em tempo real os percentuais dos votos válidos. Esta página divulgará o resultado em número absoluto somente após o fim da votação.<?php endif; ?></p>
+        <a class="button light" href="#apuracao-nacional">Acompanhe a apuração</a>
     </div>
     <figure class="results-hero-art">
         <img src="/assets/img/resultados-materiais-apuracao.jpg" width="1536" height="1024" alt="Composição conceitual com amostras de madeira e pedra, planta arquitetônica e elementos gráficos de votação e apuração">
     </figure>
 </section>
-<section class="public-results" data-live-public-results data-results-mode="<?= $h($mode) ?>">
+<section class="public-results" id="apuracao-nacional" data-live-public-results data-results-mode="<?= $h($mode) ?>">
     <header class="public-results-heading"><div><span class="passport-eyebrow dark">Parcial <span class="tag-keyword">nacional</span></span><h2><?= $mode === 'final' ? 'Resultado final' : 'Percentual geral' ?></h2></div><small><?= $mode === 'final' ? 'Apuração encerrada · ' : 'Atualizado automaticamente · ' ?><span data-public-results-updated><?= $mode === 'final' ? '14/12/2026, às 12h' : 'agora' ?></span></small></header>
     <div class="public-ranking-list" data-public-ranking>
         <?php foreach ($ranking as $i => $row): ?><article class="public-ranking-row" data-ranking-id="<?= (int) $row['id'] ?>"><span><?= $i + 1 ?>º</span><div><strong><?= $h($row['project_title']) ?></strong><small><?= $h($row['participant_name']) ?></small><i><b style="width:<?= (float) $row['percentage'] ?>%"></b></i><?php if ($mode === 'final'): ?><small class="public-absolute" data-public-absolute><?= number_format((int) $row['votes'], 0, ',', '.') ?> votos válidos</small><?php endif; ?></div><em><?= number_format((float) $row['percentage'], 1, ',', '.') ?>%</em></article><?php endforeach; ?>
