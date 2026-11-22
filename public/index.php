@@ -50,6 +50,7 @@ $routes = [
         '/admin/login' => [$admin, 'login'],
         '/admin/analytics' => [$admin, 'analytics'],
         '/admin/analytics/evolucao-votos' => [$admin, 'voteEvolution'],
+        '/admin/diagnostico-banco' => [$admin, 'databaseHealth'],
         '/admin/analytics/exportar' => [$admin, 'exportAnalytics'],
         '/admin/analytics/online' => [$admin, 'online'],
         '/admin' => [$admin, 'dashboard'],
