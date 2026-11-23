@@ -18,7 +18,7 @@ $defaultImages = [
         <a class="passport-primary-cta" href="#votacao">Conheça os finalistas <span>↓</span></a>
     </div>
     <div class="passport-hero-photo">
-        <img src="/assets/img/hero-viagem-v2.jpg" alt="Mala de viagem com materiais de arquitetura e amostras de acabamento">
+        <img src="/assets/img/hero-passaporte-oficial-2027.jpg" alt="Mala de viagem com materiais de arquitetura, amostras de acabamento e passaporte da campanha">
         <div class="passport-stamp">VOTAÇÃO<br><strong>POPULAR</strong><small>2027</small></div>
     </div>
 </section>
