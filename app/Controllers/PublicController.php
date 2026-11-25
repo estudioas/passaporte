@@ -18,6 +18,7 @@ use App\Core\Response;
 use App\Core\Schema;
 use App\Core\Security;
 use App\Core\Settings;
+use App\Core\Turnstile;
 use App\Core\View;
 use PDO;
 use RuntimeException;
@@ -87,6 +88,7 @@ final class PublicController
             'ranking' => $ranking,
             'votingOpen' => Campaign::isVotingOpen() && count($finalists) >= 3,
             'rankingEnabled' => Settings::bool('public_ranking_enabled', false) && Campaign::resultsPhase() === 'live',
+            'turnstileSiteKey' => Turnstile::configured() ? Turnstile::siteKey() : '',
         ]);
     }
 
@@ -203,11 +205,14 @@ final class PublicController
             Audit::log('vote.rejected', ['reason' => 'terms_not_accepted'], 'visitor', null, 40);
             Response::json(['ok' => false, 'message' => 'Aceite o regulamento e o aviso de privacidade para confirmar.'], 422);
         }
-        if (!Captcha::verify('vote', $_POST['captcha_id'] ?? null, $_POST['captcha_answer'] ?? null)) {
+        $verificationValid = Turnstile::configured()
+            ? Turnstile::verify($_POST['turnstile_token'] ?? null, 'vote')
+            : Captcha::verify('vote', $_POST['captcha_id'] ?? null, $_POST['captcha_answer'] ?? null);
+        if (!$verificationValid) {
             $risk = max($risk, 75);
-            $signals[] = 'captcha_failed';
-            Audit::log('vote.rejected', ['reason' => 'captcha', 'signals' => $signals], 'visitor', null, $risk);
-            Response::json(['ok' => false, 'message' => 'Resposta de segurança incorreta. Tente novamente.'], 422);
+            $signals[] = Turnstile::configured() ? 'turnstile_failed' : 'captcha_failed';
+            Audit::log('vote.rejected', ['reason' => Turnstile::configured() ? 'turnstile' : 'captcha', 'signals' => $signals], 'visitor', null, $risk);
+            Response::json(['ok' => false, 'message' => 'Não foi possível concluir a verificação automática. Tente novamente.'], 422);
         }
         if (!Geo::isBrazil()) {
             Audit::log('vote.rejected', ['reason' => 'country', 'country' => Geo::countryCode()], 'visitor', null, 100);

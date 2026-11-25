@@ -9,6 +9,7 @@ $defaultImages = [
     '/assets/img/finalista-ambiente-03-v2.jpg',
 ];
 ?>
+<?php if (!empty($turnstileSiteKey)): ?><script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script><?php endif; ?>
 <section id="top" class="passport-hero voting-hero">
     <div class="blueprint" aria-hidden="true"></div>
     <div class="passport-hero-copy">
@@ -98,8 +99,12 @@ $defaultImages = [
         <span class="passport-eyebrow dark">Confirme com atenção</span>
         <h2 id="vote-dialog-title">Seu voto vai para <span data-selected-project></span></h2>
         <p>Depois da confirmação, o voto não poderá ser alterado.</p>
-        <div class="captcha-box"><label for="vote-captcha"><span data-captcha-question>Carregando verificação…</span></label><input id="vote-captcha" type="number" inputmode="numeric" autocomplete="off" required></div>
-        <label class="vote-terms"><input type="checkbox" data-vote-terms required><span>Li e aceito o <a href="/regulamento/profissionais" target="_blank" rel="noopener">regulamento</a> e o <a href="/privacidade" target="_blank" rel="noopener">aviso de privacidade</a>. Confirmo que este voto é individual e não utiliza automação.</span></label>
+        <?php if (!empty($turnstileSiteKey)): ?>
+        <div class="turnstile-verification"><div data-turnstile data-sitekey="<?= $h($turnstileSiteKey) ?>"></div><span>Verificação automática de segurança</span></div>
+        <?php else: ?>
+        <div class="captcha-box" data-math-captcha><label for="vote-captcha"><span data-captcha-question>Carregando verificação…</span></label><input id="vote-captcha" type="number" inputmode="numeric" autocomplete="off" required></div>
+        <?php endif; ?>
+        <label class="vote-terms"><input type="checkbox" data-vote-terms required><span>Li e aceito o <a href="/regulamento/profissionais" target="_blank" rel="noopener">regulamento</a> e o <a href="/privacidade" target="_blank" rel="noopener">aviso de privacidade</a>. Confirmo que este dispositivo será usado para um único voto e que não utilizo automação.</span></label>
         <div class="honeypot" aria-hidden="true"><label>Website<input data-honeypot tabindex="-1" autocomplete="off"></label></div>
         <p class="form-feedback" role="status" data-vote-feedback></p>
         <div class="dialog-actions"><button type="button" class="button secondary" data-change-choice>Trocar escolha</button><button type="button" class="button primary" data-confirm-vote>Confirmar voto</button></div>

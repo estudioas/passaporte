@@ -44,7 +44,7 @@ if (!headers_sent()) {
     header('X-Frame-Options: SAMEORIGIN');
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
-    header("Content-Security-Policy: default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://www.instagram.com; frame-src https://www.instagram.com; connect-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'self'");
+    header("Content-Security-Policy: default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self' https://www.instagram.com https://challenges.cloudflare.com; frame-src https://www.instagram.com https://challenges.cloudflare.com; connect-src 'self' https://challenges.cloudflare.com; form-action 'self'; base-uri 'self'; frame-ancestors 'self'");
 }
 
 set_exception_handler(static function (Throwable $e): void {

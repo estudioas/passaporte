@@ -76,6 +76,7 @@ $routes = [
         '/admin/finalistas/imagens/excluir' => [$admin, 'deleteFinalistImage'],
         '/admin/auditoria/voto' => [$admin, 'updateVote'],
         '/admin/configuracoes' => [$admin, 'saveSettings'],
+        '/admin/configuracoes/turnstile' => [$admin, 'saveTurnstile'],
         '/admin/permissoes' => [$admin, 'savePermissions'],
         '/admin/usuarios/salvar' => [$admin, 'saveUser'],
     ],

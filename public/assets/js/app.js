@@ -433,8 +433,15 @@
     const confirmButton = dialog.querySelector('[data-confirm-vote]');
     const captchaInput = dialog.querySelector('#vote-captcha');
     const termsInput = dialog.querySelector('[data-vote-terms]');
+    const turnstileContainer = dialog.querySelector('[data-turnstile]');
+    const usesTurnstile = Boolean(turnstileContainer);
+    let turnstileWidgetId = null;
+    let turnstileResolve = null;
+    let turnstileReject = null;
+    let turnstileTimer = null;
 
     const loadCaptcha = async () => {
+      if (usesTurnstile || !captchaInput) return;
       feedback.textContent = '';
       captchaInput.value = '';
       dialog.querySelector('[data-captcha-question]').textContent = 'Carregando verificação…';
@@ -446,6 +453,43 @@
       } catch (_) {
         feedback.textContent = 'Não foi possível carregar a verificação. Feche e tente novamente.';
       }
+    };
+
+    const turnstileToken = async () => {
+      for (let attempt = 0; attempt < 40 && !window.turnstile?.render; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      if (!window.turnstile?.render) throw new Error('A verificação automática não carregou.');
+      if (turnstileWidgetId === null) {
+        turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+          sitekey: turnstileContainer.dataset.sitekey,
+          size: 'invisible',
+          execution: 'execute',
+          action: 'vote',
+          callback: (token) => {
+            clearTimeout(turnstileTimer);
+            turnstileResolve?.(token);
+            turnstileResolve = turnstileReject = null;
+          },
+          'error-callback': () => {
+            clearTimeout(turnstileTimer);
+            turnstileReject?.(new Error('Não foi possível concluir a verificação automática.'));
+            turnstileResolve = turnstileReject = null;
+          },
+          'expired-callback': () => { window.turnstile.reset(turnstileWidgetId); },
+        });
+      }
+      return new Promise((resolve, reject) => {
+        turnstileResolve = resolve;
+        turnstileReject = reject;
+        clearTimeout(turnstileTimer);
+        turnstileTimer = setTimeout(() => {
+          turnstileReject?.(new Error('A verificação automática demorou mais que o esperado.'));
+          turnstileResolve = turnstileReject = null;
+        }, 15000);
+        window.turnstile.reset(turnstileWidgetId);
+        window.turnstile.execute(turnstileWidgetId);
+      });
     };
 
     const submitVoteButton = document.querySelector('[data-submit-vote]');
@@ -470,35 +514,56 @@
       dialog.querySelector('[data-vote-success]').hidden = true;
       if (termsInput) termsInput.checked = false;
       dialog.showModal();
-      await loadCaptcha();
-      captchaInput.focus();
+      if (usesTurnstile) termsInput?.focus();
+      else {
+        await loadCaptcha();
+        captchaInput?.focus();
+      }
     });
 
     dialog.querySelector('[data-change-choice]')?.addEventListener('click', () => dialog.close());
     confirmButton?.addEventListener('click', async () => {
-      if (!selectedId || !captchaId || captchaInput.value.trim() === '' || !termsInput?.checked) {
+      if (!selectedId || !termsInput?.checked || (!usesTurnstile && (!captchaId || !captchaInput?.value.trim()))) {
         feedback.textContent = !termsInput?.checked
           ? 'Aceite o regulamento e o aviso de privacidade para confirmar.'
           : 'Responda à verificação para confirmar.';
         return;
       }
+      confirmButton.disabled = true;
+      confirmButton.textContent = 'Verificando…';
+      feedback.textContent = '';
+      let automaticToken = '';
+      if (usesTurnstile) {
+        try {
+          automaticToken = await turnstileToken();
+        } catch (error) {
+          feedback.textContent = error.message || 'Não foi possível concluir a verificação automática.';
+          confirmButton.disabled = false;
+          confirmButton.textContent = 'Confirmar voto';
+          return;
+        }
+      }
       const body = new FormData();
       body.append('_csrf', csrfToken);
       body.append('finalist_id', selectedId);
-      body.append('captcha_id', captchaId);
-      body.append('captcha_answer', captchaInput.value);
+      if (usesTurnstile) body.append('turnstile_token', automaticToken);
+      else {
+        body.append('captcha_id', captchaId);
+        body.append('captcha_answer', captchaInput.value);
+      }
       body.append('terms_accepted', '1');
       body.append('terms_version', '2026-11-20');
       body.append('website', dialog.querySelector('[data-honeypot]')?.value || '');
-      confirmButton.disabled = true;
       confirmButton.textContent = 'Confirmando…';
-      feedback.textContent = '';
       try {
         const response = await fetch('/api/vote', { method: 'POST', body, headers: { Accept: 'application/json' } });
         const data = await response.json();
         if (!response.ok) {
           feedback.textContent = data.message || 'Não foi possível confirmar.';
-          if (!data.duplicate) await loadCaptcha();
+          if (!data.duplicate) {
+            if (usesTurnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
+            else await loadCaptcha();
+          }
           if (data.duplicate && data.receipt) {
             dialog.querySelector('[data-vote-confirm-step]').hidden = true;
             dialog.querySelector('[data-vote-success]').hidden = false;

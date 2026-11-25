@@ -16,6 +16,7 @@ use App\Core\Response;
 use App\Core\Schema;
 use App\Core\Security;
 use App\Core\Settings;
+use App\Core\Turnstile;
 use App\Core\View;
 use RuntimeException;
 use Throwable;
@@ -766,7 +767,8 @@ final class AdminController
                 'page_jurors_enabled' => Settings::bool('page_jurors_enabled', false),
                 'public_ranking_enabled' => Settings::bool('public_ranking_enabled', false),
                 'voting_manual_closed' => Settings::bool('voting_manual_closed', false),
-
+                'turnstile_site_key' => Turnstile::siteKey(),
+                'turnstile_configured' => Turnstile::configured(),
             ],
             'message' => $_SESSION['admin_message'] ?? null,
         ], 'admin/layout');
@@ -784,6 +786,29 @@ final class AdminController
         }
         Audit::log('admin.settings_updated', ['keys' => ['public_ranking_enabled', 'voting_manual_closed', 'page_home_enabled', 'page_voting_enabled', 'page_jurors_enabled']], 'admin', (int) $user['id']);
         $_SESSION['admin_message'] = 'Configurações atualizadas.';
+        Response::redirect('/admin/configuracoes');
+    }
+
+    public function saveTurnstile(): never
+    {
+        $user = Auth::requirePermission('settings');
+        if (!Csrf::verify($_POST['_csrf'] ?? null)) {
+            Response::redirect('/admin/configuracoes');
+        }
+        $siteKey = trim((string) ($_POST['turnstile_site_key'] ?? ''));
+        $secretKey = trim((string) ($_POST['turnstile_secret_key'] ?? ''));
+        if ($siteKey === '' || strlen($siteKey) > 255 || ($secretKey !== '' && strlen($secretKey) > 255)) {
+            $_SESSION['admin_message'] = 'Informe uma chave pública válida e, na primeira configuração, a chave secreta.';
+            Response::redirect('/admin/configuracoes');
+        }
+        Settings::set('turnstile_site_key', $siteKey);
+        if ($secretKey !== '') {
+            Settings::set('turnstile_secret_encrypted', Privacy::encrypt(['secret' => $secretKey]));
+        }
+        Audit::log('admin.turnstile_updated', ['site_key_hash' => Security::secretHash($siteKey), 'secret_updated' => $secretKey !== ''], 'admin', (int) $user['id']);
+        $_SESSION['admin_message'] = Turnstile::configured()
+            ? 'Verificação automática do Cloudflare ativada.'
+            : 'Chave pública salva. Informe também a chave secreta para ativar.';
         Response::redirect('/admin/configuracoes');
     }
 
