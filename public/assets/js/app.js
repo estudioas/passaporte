@@ -572,8 +572,8 @@
             dialog.querySelector('[data-vote-confirm-step]').hidden = true;
             dialog.querySelector('[data-vote-success]').hidden = false;
             dialog.querySelector('[data-vote-outcome]').textContent = 'Voto já registrado';
-            dialog.querySelector('[data-vote-outcome-title]').textContent = 'Este dispositivo já votou.';
-            dialog.querySelector('[data-success-message]').textContent = 'Nenhum novo voto foi registrado. Abaixo está o comprovante do primeiro voto.';
+            dialog.querySelector('[data-vote-outcome-title]').textContent = 'Você já votou';
+            dialog.querySelector('[data-success-message]').textContent = 'Este é o comprovante do seu primeiro voto.';
             dialog.querySelector('[data-receipt-code]').textContent = data.receipt;
             const auditLink = dialog.querySelector('[data-audit-link]');
             if (auditLink) auditLink.href = `/auditoria?codigo=${encodeURIComponent(data.receipt)}`;
