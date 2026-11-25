@@ -493,6 +493,10 @@
     };
 
     const submitVoteButton = document.querySelector('[data-submit-vote]');
+    const disableVoting = () => {
+      document.querySelectorAll('[data-vote-choice]').forEach((item) => { item.disabled = true; });
+      if (submitVoteButton) submitVoteButton.disabled = true;
+    };
     document.querySelectorAll('[data-vote-choice]').forEach((button) => {
       button.addEventListener('click', () => {
         selectedId = button.dataset.voteChoice;
@@ -567,12 +571,15 @@
           if (data.duplicate && data.receipt) {
             dialog.querySelector('[data-vote-confirm-step]').hidden = true;
             dialog.querySelector('[data-vote-success]').hidden = false;
-            dialog.querySelector('[data-success-message]').textContent = data.message;
+            dialog.querySelector('[data-vote-outcome]').textContent = 'Voto já registrado';
+            dialog.querySelector('[data-vote-outcome-title]').textContent = 'Este dispositivo já votou.';
+            dialog.querySelector('[data-success-message]').textContent = 'Nenhum novo voto foi registrado. Abaixo está o comprovante do primeiro voto.';
             dialog.querySelector('[data-receipt-code]').textContent = data.receipt;
             const auditLink = dialog.querySelector('[data-audit-link]');
             if (auditLink) auditLink.href = `/auditoria?codigo=${encodeURIComponent(data.receipt)}`;
             const socialLink = dialog.querySelector('[data-social-link]');
-            if (socialLink) socialLink.href = selectedSocialUrl || '#';
+            if (socialLink) socialLink.hidden = true;
+            disableVoting();
           }
           return;
         }
@@ -584,7 +591,7 @@
         if (auditLink) auditLink.href = `/auditoria?codigo=${encodeURIComponent(data.receipt)}`;
         const socialLink = dialog.querySelector('[data-social-link]');
         if (socialLink) socialLink.href = selectedSocialUrl || '#';
-        document.querySelectorAll('[data-vote-choice]').forEach((item) => { item.disabled = true; });
+        disableVoting();
       } catch (_) {
         feedback.textContent = 'A conexão falhou. Seu voto não foi confirmado; tente novamente.';
       } finally {

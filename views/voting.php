@@ -111,8 +111,8 @@ $defaultImages = [
     </div>
     <div class="dialog-step passport-thanks" data-vote-success hidden>
         <img src="/assets/img/logo-ruffino.svg" alt="">
-        <span class="passport-eyebrow dark">Voto confirmado</span>
-        <h2>Obrigado por fazer parte desta viagem.</h2>
+        <span class="passport-eyebrow dark" data-vote-outcome>Voto confirmado</span>
+        <h2 data-vote-outcome-title>Obrigado por fazer parte desta viagem.</h2>
         <p data-success-message></p>
         <div class="receipt"><span>Seu comprovante</span><strong data-receipt-code></strong></div>
         <a class="passport-primary-cta" data-social-link href="#" target="_blank" rel="noopener">Curtir a publicação ↗</a>
