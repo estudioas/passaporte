@@ -856,10 +856,11 @@
     const decimal = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     const soundToggle = adminLiveRanking.querySelector('[data-vote-sound-toggle]');
     const soundStatus = adminLiveRanking.querySelector('[data-vote-sound-status]');
-    const tones = new Set();
+    const playingAlerts = new Set();
     let audio = null;
+    let voteSound = null;
     let soundEnabled = false;
-    let nextToneAt = 0;
+    let nextAlertAt = 0;
     let received = Number(adminLiveRanking.dataset.receivedVotes);
     let pending = false;
 
@@ -868,41 +869,42 @@
       try {
         if (soundEnabled) {
           soundEnabled = false;
-          tones.forEach((tone) => tone.stop());
-          nextToneAt = 0;
+          playingAlerts.forEach((alert) => alert.stop());
+          nextAlertAt = 0;
         } else {
           audio ??= new (window.AudioContext || window.webkitAudioContext)();
           await audio.resume();
-          soundEnabled = audio.state === 'running';
+          if (audio.state !== 'running') throw new Error('Audio unavailable');
+          if (!voteSound) {
+            const response = await fetch('/assets/audio/voto.mp3');
+            if (!response.ok) throw new Error('Audio file unavailable');
+            voteSound = await audio.decodeAudioData(await response.arrayBuffer());
+          }
+          soundEnabled = true;
+          playVoteSounds(1);
         }
         soundStatus.textContent = soundEnabled ? 'Som ligado nesta aba.' : 'Som desligado.';
       } catch (_) {
         soundStatus.textContent = 'O navegador não conseguiu ativar o som.';
       } finally {
-        soundToggle.setAttribute('aria-pressed', String(soundEnabled));
+        soundToggle.setAttribute('aria-checked', String(soundEnabled));
         soundToggle.disabled = false;
       }
     });
 
-    const playVoteTones = (count) => {
-      if (!soundEnabled || audio.state !== 'running' || count < 1) return;
-      let start = Math.max(audio.currentTime, nextToneAt);
+    const playVoteSounds = (count) => {
+      if (!soundEnabled || !voteSound || count < 1) return;
+      let start = Math.max(audio.currentTime, nextAlertAt);
       for (let index = 0; index < count; index += 1) {
-        const tone = audio.createOscillator();
-        const volume = audio.createGain();
-        tone.frequency.value = 660;
-        volume.gain.setValueAtTime(0, start);
-        volume.gain.linearRampToValueAtTime(0.10, start + 0.02);
-        volume.gain.linearRampToValueAtTime(0, start + 0.15);
-        tone.connect(volume);
-        volume.connect(audio.destination);
-        tones.add(tone);
-        tone.onended = () => { tones.delete(tone); tone.disconnect(); volume.disconnect(); };
-        tone.start(start);
-        tone.stop(start + 0.16);
-        start += 0.24;
+        const alert = audio.createBufferSource();
+        alert.buffer = voteSound;
+        alert.connect(audio.destination);
+        playingAlerts.add(alert);
+        alert.onended = () => { playingAlerts.delete(alert); alert.disconnect(); };
+        alert.start(start);
+        start += voteSound.duration + 0.12;
       }
-      nextToneAt = start;
+      nextAlertAt = start;
     };
 
     const refreshAdminRanking = async () => {
@@ -913,6 +915,11 @@
         if (!response.ok) return;
         const data = await response.json();
         if (!data.ok) return;
+        if (Number.isSafeInteger(data.received)) {
+          const newVotes = Number.isSafeInteger(received) ? data.received - received : 0;
+          received = data.received;
+          playVoteSounds(newVotes);
+        }
         const list = adminLiveRanking.querySelector('.ranking-list');
         data.ranking.forEach((candidate, index) => {
           const row = list?.querySelector(`[data-ranking-id="${candidate.id}"]`);
@@ -927,11 +934,6 @@
         if (total) total.textContent = integer.format(data.total);
         const updated = adminLiveRanking.querySelector('[data-ranking-updated]');
         if (updated) updated.textContent = `Atualizado às ${data.updated_at}`;
-        if (Number.isSafeInteger(data.received)) {
-          const newVotes = Number.isSafeInteger(received) ? data.received - received : 0;
-          received = data.received;
-          playVoteTones(newVotes);
-        }
       } catch (_) { /* Mantém a última apuração disponível. */ }
       finally { pending = false; }
     };
