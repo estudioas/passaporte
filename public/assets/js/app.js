@@ -575,8 +575,7 @@
             dialog.querySelector('[data-vote-outcome-title]').textContent = 'Você já votou';
             dialog.querySelector('[data-success-message]').textContent = 'Obrigado por participar! Abaixo está o comprovante do seu voto.';
             dialog.querySelector('[data-receipt-code]').textContent = data.receipt;
-            const auditLink = dialog.querySelector('[data-audit-link]');
-            if (auditLink) auditLink.href = `/auditoria?codigo=${encodeURIComponent(data.receipt)}`;
+            dialog.querySelector('[data-vote-receipt-action]').hidden = true;
             const socialLink = dialog.querySelector('[data-social-link]');
             if (socialLink) socialLink.hidden = true;
             disableVoting();
@@ -588,7 +587,8 @@
         dialog.querySelector('[data-success-message]').textContent = data.message;
         dialog.querySelector('[data-receipt-code]').textContent = data.receipt;
         const auditLink = dialog.querySelector('[data-audit-link]');
-        if (auditLink) auditLink.href = `/auditoria?codigo=${encodeURIComponent(data.receipt)}`;
+        auditLink.href = `/auditoria?codigo=${encodeURIComponent(data.receipt)}`;
+        dialog.querySelector('[data-vote-receipt-action]').hidden = false;
         const socialLink = dialog.querySelector('[data-social-link]');
         if (socialLink) socialLink.href = selectedSocialUrl || '#';
         disableVoting();

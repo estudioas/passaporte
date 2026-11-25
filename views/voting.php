@@ -114,7 +114,10 @@ $defaultImages = [
         <span class="passport-eyebrow dark" data-vote-outcome>Voto confirmado</span>
         <h2 data-vote-outcome-title>Obrigado por fazer parte desta viagem.</h2>
         <p data-success-message></p>
-        <div class="receipt"><span>Seu comprovante</span><strong data-receipt-code></strong></div>
+        <div class="receipt vote-receipt">
+            <div><span>Seu comprovante</span> <strong data-receipt-code></strong></div>
+            <div data-vote-receipt-action hidden><a class="button primary" data-audit-link href="/auditoria">Consultar meu voto</a></div>
+        </div>
         <a class="passport-primary-cta" data-social-link href="#" target="_blank" rel="noopener">Curtir a publicação ↗</a>
     </div>
 </dialog>
