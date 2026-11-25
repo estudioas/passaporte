@@ -7,6 +7,21 @@
 <section class="admin-panel" id="eventos"><div class="panel-heading"><div><span>Rastreabilidade</span><h2><?= $highRiskRecent ? 'Alertas de alto risco' : 'Log completo de eventos' ?></h2></div><small>50 eventos por página</small></div>
 <?php if ($highRiskRecent): ?><p>Eventos com risco de 60 pontos ou mais nas últimas 24 horas.</p><?php endif; ?>
 <form class="filter-bar" method="get" action="/admin/auditoria#eventos"><?php if ($highRiskRecent): ?><input type="hidden" name="alertas" value="24h"><?php else: ?><label>De<input type="date" name="start" value="<?= $h($range['start']) ?>"></label><label>Até<input type="date" name="end" value="<?= $h($range['end']) ?>"></label><?php endif; ?><label>Evento<input name="event" value="<?= $h($eventType) ?>" placeholder="Ex.: http.request"></label><label>IP completo<input name="ip" value="<?= $h($ip) ?>" placeholder="IPv4 ou IPv6"></label><button class="button secondary small">Filtrar logs</button><a href="/admin/auditoria#eventos">Limpar</a></form>
+<div class="table-wrap">
+    <h3>Tentativas bloqueadas por finalista</h3>
+    <p>Rejeições e tentativas de voto repetido no filtro atual do log. Esses eventos ficam fora da apuração.</p>
+    <table>
+        <thead><tr><th scope="col">Finalista</th><th scope="col">Tentativas bloqueadas</th></tr></thead>
+        <tbody>
+        <?php foreach ($finalists as $finalist): ?>
+            <?php $blocked = $blockedByFinalist[$finalist['id']] ?? 0; ?>
+            <?php if (!(int) $finalist['active'] && $blocked === 0) continue; ?>
+            <tr><th scope="row"><?= $h($finalist['project_title']) ?></th><td><?= number_format($blocked, 0, ',', '.') ?></td></tr>
+        <?php endforeach; ?>
+            <tr><th scope="row">Sem finalista identificado</th><td><?= number_format($blockedUnassigned, 0, ',', '.') ?></td></tr>
+        </tbody>
+    </table>
+</div>
 <p>IPs completos disponíveis para eventos novos. No histórico anterior havia somente hashes. Cidade e região dependem dos dados de geolocalização disponíveis.</p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Evento</th><th>Ator</th><th>IP completo</th><th>Cidade / região / país</th><th>Risco</th><th>Rota</th><th>Finalista informado</th><th>Metadados</th><th>Hash</th><th>Data</th></tr></thead><tbody><?php foreach($events as $index => $event): ?><tr><td><?= (int)$event['id'] ?></td><td><code><?= $h($event['event_type']) ?></code></td><td><?= $h($event['actor_type']) ?><?= $event['actor_id']?' #'.(int)$event['actor_id']:'' ?></td><td><code><?= $h($event['ip_address']) ?></code></td><td><?= $h($event['city'] ?: 'Não informada') ?><br><?= $h($event['region']) ?> · <?= $h($event['country_code']) ?></td><td><?= (int)$event['risk_score'] ?></td><td><?= $h($event['request_path']) ?></td><td>
     <?php if (isset($attemptedIds[$index])): $attemptedId = $attemptedIds[$index]; ?>
         <?= isset($finalistTitles[$attemptedId]) ? $h($finalistTitles[$attemptedId]) : 'ID informado #' . $attemptedId ?>

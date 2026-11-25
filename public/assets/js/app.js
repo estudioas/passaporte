@@ -854,7 +854,60 @@
   if (adminLiveRanking) {
     const integer = new Intl.NumberFormat('pt-BR');
     const decimal = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const soundToggle = adminLiveRanking.querySelector('[data-vote-sound-toggle]');
+    const soundStatus = adminLiveRanking.querySelector('[data-vote-sound-status]');
+    const tones = new Set();
+    let audio = null;
+    let soundEnabled = false;
+    let nextToneAt = 0;
+    let received = Number(adminLiveRanking.dataset.receivedVotes);
+    let pending = false;
+
+    soundToggle?.addEventListener('click', async () => {
+      soundToggle.disabled = true;
+      try {
+        if (soundEnabled) {
+          soundEnabled = false;
+          tones.forEach((tone) => tone.stop());
+          nextToneAt = 0;
+        } else {
+          audio ??= new (window.AudioContext || window.webkitAudioContext)();
+          await audio.resume();
+          soundEnabled = audio.state === 'running';
+        }
+        soundStatus.textContent = soundEnabled ? 'Som ligado nesta aba.' : 'Som desligado.';
+      } catch (_) {
+        soundStatus.textContent = 'O navegador não conseguiu ativar o som.';
+      } finally {
+        soundToggle.setAttribute('aria-pressed', String(soundEnabled));
+        soundToggle.disabled = false;
+      }
+    });
+
+    const playVoteTones = (count) => {
+      if (!soundEnabled || audio.state !== 'running' || count < 1) return;
+      let start = Math.max(audio.currentTime, nextToneAt);
+      for (let index = 0; index < count; index += 1) {
+        const tone = audio.createOscillator();
+        const volume = audio.createGain();
+        tone.frequency.value = 660;
+        volume.gain.setValueAtTime(0, start);
+        volume.gain.linearRampToValueAtTime(0.10, start + 0.02);
+        volume.gain.linearRampToValueAtTime(0, start + 0.15);
+        tone.connect(volume);
+        volume.connect(audio.destination);
+        tones.add(tone);
+        tone.onended = () => { tones.delete(tone); tone.disconnect(); volume.disconnect(); };
+        tone.start(start);
+        tone.stop(start + 0.16);
+        start += 0.24;
+      }
+      nextToneAt = start;
+    };
+
     const refreshAdminRanking = async () => {
+      if (pending) return;
+      pending = true;
       try {
         const response = await fetch('/admin/api/ranking', { credentials: 'same-origin', cache: 'no-store' });
         if (!response.ok) return;
@@ -874,7 +927,13 @@
         if (total) total.textContent = integer.format(data.total);
         const updated = adminLiveRanking.querySelector('[data-ranking-updated]');
         if (updated) updated.textContent = `Atualizado às ${data.updated_at}`;
+        if (Number.isSafeInteger(data.received)) {
+          const newVotes = Number.isSafeInteger(received) ? data.received - received : 0;
+          received = data.received;
+          playVoteTones(newVotes);
+        }
       } catch (_) { /* Mantém a última apuração disponível. */ }
+      finally { pending = false; }
     };
     window.setInterval(refreshAdminRanking, 15000);
   }

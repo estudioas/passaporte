@@ -18,7 +18,6 @@ use App\Core\Security;
 use App\Core\Settings;
 use App\Core\Turnstile;
 use App\Core\View;
-use PDO;
 use RuntimeException;
 use Throwable;
 
@@ -78,6 +77,7 @@ final class AdminController
         unset($row);
         $metrics = [
             'valid_votes' => $total,
+            'received_votes' => (int) $pdo->query('SELECT COUNT(*) FROM votes')->fetchColumn(),
             'accesses_24h' => (int) $pdo->query('SELECT COUNT(*) FROM audit_events WHERE event_type = "http.request" AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)')->fetchColumn(),
             'review_queue' => (int) $pdo->query('SELECT COUNT(*) FROM votes WHERE status = "review"')->fetchColumn(),
             'high_risk_24h' => (int) $pdo->query('SELECT COUNT(*) FROM audit_events WHERE ' . self::HIGH_RISK_RECENT)->fetchColumn(),
@@ -105,7 +105,8 @@ final class AdminController
             $row['percentage'] = $total > 0 ? round($row['vote_count'] * 100 / $total, 1) : 0.0;
         }
         unset($row);
-        Response::json(['ok' => true, 'total' => $total, 'ranking' => $rows, 'updated_at' => date('H:i:s')]);
+        $received = (int) Database::connection()->query('SELECT COUNT(*) FROM votes')->fetchColumn();
+        Response::json(['ok' => true, 'total' => $total, 'received' => $received, 'ranking' => $rows, 'updated_at' => date('H:i:s')]);
     }
 
     public function finalists(): void
@@ -719,7 +720,8 @@ final class AdminController
         $stmt = $pdo->prepare('SELECT id, event_type, actor_type, actor_id, country_code, risk_score, request_method, request_path, metadata_json, entry_hash, created_at FROM audit_events' . $clause . ' ORDER BY id DESC LIMIT 50 OFFSET ' . $eventPager['offset']);
         $stmt->execute($params);
         $events = array_map(static fn ($row) => Analytics::eventDetails($row, Auth::can('view_ips', $user)), $stmt->fetchAll());
-        $finalistTitles = [];
+        $finalists = $pdo->query('SELECT id, project_title, active FROM finalists ORDER BY active DESC, sort_order, id')->fetchAll();
+        $finalistTitles = array_column($finalists, 'project_title', 'id');
         $attemptedIds = [];
         foreach ($events as $index => $event) {
             if (in_array($event['event_type'], ['vote.rejected', 'vote.duplicate'], true)) {
@@ -730,15 +732,24 @@ final class AdminController
                 }
             }
         }
-        if ($attemptedIds) {
-            $ids = array_values(array_unique($attemptedIds));
-            $placeholders = implode(',', array_fill(0, count($ids), '?'));
-            $stmt = $pdo->prepare("SELECT id, project_title FROM finalists WHERE id IN ($placeholders)");
-            $stmt->execute($ids);
-            $finalistTitles = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+        $stmt = $pdo->prepare(
+            "SELECT JSON_EXTRACT(metadata_json, '$.finalist_id') AS finalist_id, COUNT(*) AS total "
+            . 'FROM audit_events' . $clause
+            . " AND event_type IN ('vote.rejected', 'vote.duplicate') GROUP BY finalist_id"
+        );
+        $stmt->execute($params);
+        $blockedByFinalist = [];
+        $blockedUnassigned = 0;
+        foreach ($stmt->fetchAll() as $row) {
+            $id = (string) $row['finalist_id'];
+            if (isset($finalistTitles[$id])) {
+                $blockedByFinalist[$id] = (int) $row['total'];
+            } else {
+                $blockedUnassigned += (int) $row['total'];
+            }
         }
         $chain = ($_GET['verify'] ?? '') === '1' ? Audit::verifyChain() : null;
-        View::render('admin/audit', compact('user', 'votes', 'events', 'chain', 'votePager', 'eventPager', 'range', 'eventType', 'ip', 'highRiskRecent', 'attemptedIds', 'finalistTitles') + ['title' => 'Auditoria', 'filters' => compact('status', 'risk')], 'admin/layout');
+        View::render('admin/audit', compact('user', 'votes', 'events', 'chain', 'votePager', 'eventPager', 'range', 'eventType', 'ip', 'highRiskRecent', 'attemptedIds', 'finalistTitles', 'finalists', 'blockedByFinalist', 'blockedUnassigned') + ['title' => 'Auditoria', 'filters' => compact('status', 'risk')], 'admin/layout');
     }
 
     public function updateVote(): never
