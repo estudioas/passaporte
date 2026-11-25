@@ -71,7 +71,10 @@ $defaultImages = [
         <button class="passport-vote-button" type="button" data-submit-vote disabled>Confirmar meu voto</button>
     </div>
     <p class="vote-integrity-note">É permitido um único voto por dispositivo. O limite é aplicado por meio de um identificador pseudônimo armazenado no navegador. Sinais de repetição também são registrados para auditoria; o compartilhamento de uma mesma rede, isoladamente, não caracteriza irregularidade.</p>
-    <p class="vote-period-status"><?= $votingOpen ? 'Votação aberta até 11/12/2026, às 23h59 (horário de Brasília).' : 'Votação disponível de 25/11/2026 a 11/12/2026.' ?></p>
+    <p class="vote-period-status">
+        <?= $votingOpen ? 'Votação aberta até 11/12/2026, às 23h59 (horário de Brasília).' : 'Votação disponível de 25/11/2026 a 11/12/2026.' ?><br>
+        <a href="/auditoria#codigo">Consultar meu voto</a>
+    </p>
 </section>
 
 <dialog class="image-lightbox" data-image-lightbox aria-label="Visualização ampliada da foto">
