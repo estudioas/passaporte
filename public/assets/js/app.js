@@ -590,7 +590,7 @@
             dialog.querySelector('[data-vote-confirm-step]').hidden = true;
             dialog.querySelector('[data-vote-success]').hidden = false;
             dialog.querySelector('[data-vote-outcome]').textContent = 'Voto já registrado';
-            dialog.querySelector('[data-vote-outcome-title]').textContent = 'Você já votou';
+            dialog.querySelector('[data-vote-outcome-title]').textContent = 'Você já votou anteriormente';
             dialog.querySelector('[data-success-message]').textContent = 'Obrigado por participar! Abaixo está o comprovante do seu voto.';
             dialog.querySelector('[data-receipt-code]').textContent = data.receipt;
             dialog.querySelector('[data-vote-receipt-action]').hidden = true;
