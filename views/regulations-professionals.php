@@ -31,19 +31,19 @@
 <p class="legal-clause"><span class="clause-number">4.1.</span><span>Após o encerramento das inscrições, uma comissão julgadora técnica da Ruffino Acabamentos realizará a avaliação interna dos projetos.</span></p>
 <p class="legal-clause"><span class="clause-number">4.2.</span><span>Serão selecionados ao menos 03 (três) projetos finalistas, escolhidos com base em critérios técnicos como: solução estética, criatividade, aplicação do piso, qualidade da execução e coerência com o espaço.</span></p>
 <p class="legal-clause"><span class="clause-number">4.3.</span><span>Os projetos finalistas serão publicados no <a href="https://www.ruffinoacabamentos.com/passaporte-revestir">site oficial da campanha</a> no período de <span class="legal-nowrap">25/11/2026</span> a <span class="legal-nowrap">11/12/2026</span>.</span></p>
-<p class="legal-clause"><span class="clause-number">4.4.</span><span>A votação será feita pelo público, com modalidade de voto único individual e vencerá o projeto que obtiver maior número de votos dentro do respectivo site.</span></p>
+<p class="legal-clause"><span class="clause-number">4.4.</span><span>A votação será feita pelo público, na modalidade de voto único individual, na <a href="/votacao">página de votação da campanha</a>. Vencerá o projeto que obtiver o maior número de votos válidos registrados nessa página.</span></p>
 <p class="legal-clause"><span class="clause-number">4.5.</span><span>O resultado será divulgado até o dia <span class="legal-nowrap">14/12/2026</span> no site oficial, bem como nas redes sociais da Ruffino Acabamentos e por contato direto com o vencedor.</span></p>
 </section>
 <section class="legal-topic">
 <h2>5. FRAUDES E DESCLASSIFICAÇÃO</h2>
-<p class="legal-clause"><span class="clause-number">5.1.</span><span>É expressamente proibido o uso de robôs, compra de curtidas, mecanismos artificiais de engajamento ou qualquer tentativa de manipulação de votos.</span></p>
-<p class="legal-clause"><span class="clause-number">5.2.</span><span>A Ruffino Acabamentos realizará monitoramento automatizado e manual de comportamento suspeito.</span></p>
-<p class="legal-clause"><span class="clause-number">5.3.</span><span>Configuram tentativa de fraude, dentre outras situações:</span></p>
+<p class="legal-clause"><span class="clause-number">5.1.</span><span>É expressamente proibido o uso de robôs, a compra de votos, o uso de mecanismos artificiais para gerar ou inflar votos e qualquer tentativa de manipulação dos resultados da votação.</span></p>
+<p class="legal-clause"><span class="clause-number">5.2.</span><span>A Ruffino Acabamentos realizará monitoramento automatizado e manual de atividades suspeitas na votação do site.</span></p>
+<p class="legal-clause"><span class="clause-number">5.3.</span><span>Entre as situações monitoradas para identificar possíveis tentativas de fraude estão:</span></p>
 <ul class="legal-bullet-list">
-  <li>variações anormais e repentinamente altas no volume de curtidas;</li>
-  <li>contas falsas, recém-criadas ou sem atividade real;</li>
-  <li>curtidas vindas de países ou regiões sem relação com o participante;</li>
-  <li>uso de serviços de “pacote de curtidas”.</li>
+  <li>aumentos súbitos e atípicos no volume de votos registrados no site;</li>
+  <li>envios automatizados ou repetidos em intervalos incompatíveis com o uso normal da página;</li>
+  <li>tentativas de voto com origem identificada fora do Brasil;</li>
+  <li>uso de serviços que vendem ou geram votos artificialmente.</li>
 </ul>
 <p class="legal-clause"><span class="clause-number">5.4.</span><span>Qualquer indício de fraude permite à Ruffino Acabamentos desclassificar o participante, sem necessidade de aviso prévio, sendo a decisão irrecorrível.</span></p>
 <p class="legal-clause"><span class="clause-number">5.5.</span><span>Caso o projeto vencedor seja desclassificado por fraude, o prêmio será automaticamente concedido ao segundo colocado, seguindo a ordem natural da votação legítima.</span></p>
