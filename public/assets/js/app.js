@@ -10,6 +10,22 @@
   });
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
+  document.querySelectorAll('[data-copy-receipt]').forEach((box) => {
+    const code = box.querySelector('[data-receipt-code]');
+    const status = box.querySelector('[data-copy-receipt-status]');
+    box.querySelector('[data-copy-receipt-button]').addEventListener('click', async () => {
+      const value = code.textContent.trim();
+      if (!value) return;
+      status.textContent = '';
+      try {
+        await navigator.clipboard.writeText(value);
+        status.textContent = 'Código copiado.';
+      } catch (_) {
+        status.textContent = 'Selecione o código acima e copie manualmente.';
+      }
+    });
+  });
+
   const navToggle = document.querySelector('.nav-toggle');
   const nav = document.querySelector('.main-nav');
   navToggle?.addEventListener('click', () => {
@@ -536,6 +552,8 @@
       confirmButton.disabled = true;
       confirmButton.textContent = 'Verificando…';
       feedback.textContent = '';
+      const finalistId = selectedId;
+      const instagramPostUrl = selectedSocialUrl;
       let automaticToken = '';
       if (usesTurnstile) {
         try {
@@ -549,7 +567,7 @@
       }
       const body = new FormData();
       body.append('_csrf', csrfToken);
-      body.append('finalist_id', selectedId);
+      body.append('finalist_id', finalistId);
       if (usesTurnstile) body.append('turnstile_token', automaticToken);
       else {
         body.append('captcha_id', captchaId);
@@ -576,8 +594,7 @@
             dialog.querySelector('[data-success-message]').textContent = 'Obrigado por participar! Abaixo está o comprovante do seu voto.';
             dialog.querySelector('[data-receipt-code]').textContent = data.receipt;
             dialog.querySelector('[data-vote-receipt-action]').hidden = true;
-            const socialLink = dialog.querySelector('[data-social-link]');
-            if (socialLink) socialLink.hidden = true;
+            dialog.querySelector('[data-social-action]').hidden = true;
             disableVoting();
           }
           return;
@@ -590,7 +607,8 @@
         auditLink.href = `/auditoria?codigo=${encodeURIComponent(data.receipt)}`;
         dialog.querySelector('[data-vote-receipt-action]').hidden = false;
         const socialLink = dialog.querySelector('[data-social-link]');
-        if (socialLink) socialLink.href = selectedSocialUrl || '#';
+        if (instagramPostUrl) socialLink.href = instagramPostUrl;
+        dialog.querySelector('[data-social-action]').hidden = !instagramPostUrl;
         disableVoting();
       } catch (_) {
         feedback.textContent = 'A conexão falhou. Seu voto não foi confirmado; tente novamente.';

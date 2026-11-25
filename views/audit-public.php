@@ -16,7 +16,12 @@
     <?php elseif (is_array($result)): ?>
         <div class="receipt-result">
             <span class="success-mark">✓</span>
-            <div><span><?= $automaticLookup ? 'Seu comprovante de voto' : 'Comprovante válido' ?></span><strong><?= $h($result['receipt_code']) ?></strong></div>
+            <div data-copy-receipt>
+                <span><?= $automaticLookup ? 'Seu comprovante de voto' : 'Comprovante válido' ?></span>
+                <strong data-receipt-code><?= $h($result['receipt_code']) ?></strong>
+                <button class="button secondary small" type="button" data-copy-receipt-button>Copiar código</button>
+                <small role="status" data-copy-receipt-status></small>
+            </div>
             <dl>
                 <div><dt>Projeto escolhido</dt><dd><?= $h($result['project_title']) ?> — <?= $h($result['participant_name']) ?></dd></div>
                 <div><dt>Confirmado em</dt><dd><?= $h(date('d/m/Y H:i', strtotime((string) $result['confirmed_at']))) ?></dd></div>

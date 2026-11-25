@@ -137,8 +137,8 @@ final class AdminController
         $participant = trim((string) ($_POST['participant_name'] ?? ''));
         $title = trim((string) ($_POST['project_title'] ?? ''));
         $instagram = trim((string) ($_POST['instagram_url'] ?? ''));
-        if ($participant === '' || $title === '' || !filter_var($instagram, FILTER_VALIDATE_URL)) {
-            $_SESSION['admin_error'] = 'Preencha nome, projeto e uma URL válida do Instagram.';
+        if ($participant === '' || $title === '' || ($instagram !== '' && !filter_var($instagram, FILTER_VALIDATE_URL))) {
+            $_SESSION['admin_error'] = 'Preencha o nome e o projeto. Se informar uma publicação do Instagram, use uma URL válida.';
             Response::redirect('/admin/finalistas');
         }
         if ($active) {

@@ -43,6 +43,13 @@ $defaultImages = [
                     ? (string) $finalist['fallback_image_url']
                     : $defaultImages[$identityNumber % count($defaultImages)];
                 $projectImages = $finalist['images'] ?? [];
+                $instagram = parse_url(trim((string) $finalist['instagram_url']));
+                $instagramPath = $instagram['path'] ?? '';
+                $instagramPost = strtolower($instagram['scheme'] ?? '') === 'https'
+                    && in_array(strtolower($instagram['host'] ?? ''), ['instagram.com', 'www.instagram.com'], true)
+                    && preg_match('~\A/(?:p|reel|tv)/[A-Za-z0-9_-]+/?\z~', $instagramPath)
+                    ? 'https://www.instagram.com' . $instagramPath
+                    : '';
             ?>
             <article class="candidate-card" data-finalist-id="<?= (int) $finalist['id'] ?>" data-finalist-key="<?= $h($finalist['slug']) ?>">
                 <div class="candidate-carousel" data-carousel aria-label="Fotos do projeto <?= $h($finalist['project_title']) ?>">
@@ -60,7 +67,7 @@ $defaultImages = [
                     <div class="candidate-carousel-controls"><button type="button" data-carousel-prev aria-label="Foto anterior">‹</button><span><b data-carousel-current>1</b>/<?= count($projectImages) ?></span><button type="button" data-carousel-next aria-label="Próxima foto">›</button></div>
                     <?php endif; ?>
                 </div>
-                <button class="candidate-select" type="button" data-vote-choice="<?= (int) $finalist['id'] ?>" data-vote-label="<?= $h($finalist['project_title']) ?>" data-vote-social="<?= $h($finalist['instagram_url']) ?>" aria-pressed="false" <?= $votingOpen ? '' : 'disabled' ?>>
+                <button class="candidate-select" type="button" data-vote-choice="<?= (int) $finalist['id'] ?>" data-vote-label="<?= $h($finalist['project_title']) ?>" data-vote-social="<?= $h($instagramPost) ?>" aria-pressed="false" <?= $votingOpen ? '' : 'disabled' ?>>
                     <div class="candidate-meta"><div><small>PROJETO</small><h3><?= $h($finalist['project_title']) ?></h3><p><?= $h($finalist['participant_name']) ?></p><strong class="candidate-select-label">Selecionar este projeto</strong></div><span class="candidate-radio" aria-hidden="true">✓</span></div>
                 </button>
             </article>
@@ -117,10 +124,11 @@ $defaultImages = [
         <span class="passport-eyebrow dark" data-vote-outcome>Voto confirmado</span>
         <h2 data-vote-outcome-title>Obrigado por fazer parte desta viagem.</h2>
         <p data-success-message></p>
-        <div class="receipt vote-receipt">
+        <div class="receipt vote-receipt" data-copy-receipt>
             <div><span>Seu comprovante</span> <strong data-receipt-code></strong></div>
+            <div><button class="button secondary small" type="button" data-copy-receipt-button>Copiar código</button> <small role="status" data-copy-receipt-status></small></div>
             <div data-vote-receipt-action hidden><a class="button primary" data-audit-link href="/auditoria">Consultar meu voto</a></div>
         </div>
-        <a class="passport-primary-cta" data-social-link href="#" target="_blank" rel="noopener">Curtir a publicação ↗</a>
+        <div data-social-action hidden><a class="passport-primary-cta" data-social-link target="_blank" rel="noopener noreferrer">Curtir a publicação ↗</a></div>
     </div>
 </dialog>
