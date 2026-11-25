@@ -4,17 +4,19 @@
     <h1>Cada voto confirmado deixa uma marca verificável.</h1>
     <p>Consulte seu comprovante sem expor dados pessoais ou o volume total da votação.</p>
 </section>
-<section class="section audit-explainer">
+<section id="consulta-voto" class="section audit-explainer">
     <form class="receipt-search" method="get" action="/auditoria">
         <label for="codigo">Código do comprovante</label>
         <div><input id="codigo" name="codigo" value="<?= $h($receipt) ?>" placeholder="PR-…" required><button class="button primary">Verificar</button></div>
     </form>
-    <?php if ($result === false): ?>
+    <?php if ($automaticLookup && !is_array($result)): ?>
+        <p class="notice subtle">Não encontramos um voto neste navegador. Abra a consulta no navegador em que votou ou digite o código do comprovante acima.</p>
+    <?php elseif ($result === false): ?>
         <div class="notice error">Comprovante não encontrado. Confira o código exatamente como foi exibido.</div>
     <?php elseif (is_array($result)): ?>
         <div class="receipt-result">
             <span class="success-mark">✓</span>
-            <div><span>Comprovante válido</span><strong><?= $h($result['receipt_code']) ?></strong></div>
+            <div><span><?= $automaticLookup ? 'Seu comprovante de voto' : 'Comprovante válido' ?></span><strong><?= $h($result['receipt_code']) ?></strong></div>
             <dl>
                 <div><dt>Projeto escolhido</dt><dd><?= $h($result['project_title']) ?> — <?= $h($result['participant_name']) ?></dd></div>
                 <div><dt>Confirmado em</dt><dd><?= $h(date('d/m/Y H:i', strtotime((string) $result['confirmed_at']))) ?></dd></div>

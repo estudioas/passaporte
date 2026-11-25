@@ -484,18 +484,29 @@ final class PublicController
 
     public function auditPage(): void
     {
+        header('Cache-Control: private, no-store');
+        header('Referrer-Policy: no-referrer');
+        $receipt = is_string($_GET['codigo'] ?? null) ? trim($_GET['codigo']) : '';
+        $automaticLookup = $receipt === '' && ($_GET['consulta'] ?? null) === 'meu';
+        $deviceHash = $automaticLookup ? Security::existingDeviceHash() : null;
         $this->logPageView('public_audit');
-        $receipt = trim((string) ($_GET['codigo'] ?? ''));
         $result = null;
-        if ($receipt !== '') {
+        if ($receipt !== '' || $deviceHash !== null) {
+            $field = $receipt !== '' ? 'v.receipt_code' : 'v.device_hash';
             $stmt = Database::connection()->prepare(
-                'SELECT v.receipt_code, v.status, v.confirmed_at, v.risk_score, f.participant_name, f.project_title, a.entry_hash '
-                . 'FROM votes v JOIN finalists f ON f.id = v.finalist_id LEFT JOIN audit_events a ON a.id = v.audit_event_id WHERE v.receipt_code = ? LIMIT 1'
+                'SELECT v.receipt_code, v.status, v.confirmed_at, f.participant_name, f.project_title, a.entry_hash '
+                . 'FROM votes v JOIN finalists f ON f.id = v.finalist_id LEFT JOIN audit_events a ON a.id = v.audit_event_id '
+                . "WHERE {$field} = ? LIMIT 1"
             );
-            $stmt->execute([$receipt]);
+            $stmt->execute([$receipt !== '' ? $receipt : $deviceHash]);
             $result = $stmt->fetch() ?: false;
         }
-        View::render('audit-public', ['title' => 'Auditoria da votação', 'receipt' => $receipt, 'result' => $result]);
+        View::render('audit-public', [
+            'title' => 'Auditoria da votação',
+            'receipt' => $receipt,
+            'result' => $result,
+            'automaticLookup' => $automaticLookup,
+        ]);
     }
 
     private function ranking(bool $includeVotes = false): array

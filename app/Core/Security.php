@@ -60,11 +60,23 @@ final class Security
         return self::secretHash(self::userAgent());
     }
 
+    public static function existingDeviceHash(): ?string
+    {
+        $id = self::deviceCookie();
+        return $id === null ? null : self::secretHash($id);
+    }
+
+    private static function deviceCookie(): ?string
+    {
+        $value = $_COOKIE['pr_device'] ?? null;
+        return is_string($value) && preg_match('/\A[a-f0-9]{64}\z/', $value) ? $value : null;
+    }
+
     public static function deviceId(): string
     {
         $name = 'pr_device';
-        $value = (string) ($_COOKIE[$name] ?? '');
-        if (!preg_match('/^[a-f0-9]{64}$/', $value)) {
+        $value = self::deviceCookie();
+        if ($value === null) {
             $value = bin2hex(random_bytes(32));
             $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
                 || ((bool) Config::get('security.trust_proxy_headers', false) && ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
