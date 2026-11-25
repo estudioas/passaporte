@@ -856,13 +856,50 @@
     const decimal = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     const soundToggle = adminLiveRanking.querySelector('[data-vote-sound-toggle]');
     const soundStatus = adminLiveRanking.querySelector('[data-vote-sound-status]');
+    const soundPreference = 'passaporte-admin-vote-sound';
     const playingAlerts = new Set();
     let audio = null;
     let voteSound = null;
+    let soundDownload = null;
     let soundEnabled = false;
     let nextAlertAt = 0;
     let received = Number(adminLiveRanking.dataset.receivedVotes);
     let pending = false;
+
+    try {
+      soundEnabled = localStorage.getItem(soundPreference) === '1';
+    } catch (_) { /* O controle ainda funciona durante esta visita. */ }
+
+    const renderSoundState = () => {
+      soundToggle?.setAttribute('aria-checked', String(soundEnabled));
+      if (soundStatus) soundStatus.textContent = soundEnabled ? 'Ligado' : 'Desligado';
+    };
+
+    const prepareSound = async (resume) => {
+      audio ??= new (window.AudioContext || window.webkitAudioContext)();
+      if (resume && audio.state !== 'running') await audio.resume();
+      if (!voteSound) {
+        soundDownload ??= (async () => {
+          const response = await fetch('/assets/audio/voto.mp3');
+          if (!response.ok) throw new Error('Audio file unavailable');
+          voteSound = await audio.decodeAudioData(await response.arrayBuffer());
+        })();
+        try {
+          await soundDownload;
+        } finally {
+          soundDownload = null;
+        }
+      }
+    };
+
+    renderSoundState();
+    if (soundEnabled) prepareSound(false).catch(() => {});
+    const resumeSavedSound = (event) => {
+      if (!soundEnabled || soundToggle?.contains(event.target) || (audio?.state === 'running' && voteSound)) return;
+      prepareSound(true).catch(() => {});
+    };
+    document.addEventListener('click', resumeSavedSound);
+    document.addEventListener('keydown', resumeSavedSound);
 
     soundToggle?.addEventListener('click', async () => {
       soundToggle.disabled = true;
@@ -872,28 +909,25 @@
           playingAlerts.forEach((alert) => alert.stop());
           nextAlertAt = 0;
         } else {
-          audio ??= new (window.AudioContext || window.webkitAudioContext)();
-          await audio.resume();
+          await prepareSound(true);
           if (audio.state !== 'running') throw new Error('Audio unavailable');
-          if (!voteSound) {
-            const response = await fetch('/assets/audio/voto.mp3');
-            if (!response.ok) throw new Error('Audio file unavailable');
-            voteSound = await audio.decodeAudioData(await response.arrayBuffer());
-          }
           soundEnabled = true;
           playVoteSounds(1);
         }
-        soundStatus.textContent = soundEnabled ? 'Som ligado nesta aba.' : 'Som desligado.';
+        try {
+          localStorage.setItem(soundPreference, soundEnabled ? '1' : '0');
+        } catch (_) { /* O controle ainda funciona durante esta visita. */ }
+        soundToggle.removeAttribute('title');
       } catch (_) {
-        soundStatus.textContent = 'O navegador não conseguiu ativar o som.';
+        soundToggle.title = 'O navegador não conseguiu ativar o áudio. Tente novamente.';
       } finally {
-        soundToggle.setAttribute('aria-checked', String(soundEnabled));
+        renderSoundState();
         soundToggle.disabled = false;
       }
     });
 
     const playVoteSounds = (count) => {
-      if (!soundEnabled || !voteSound || count < 1) return;
+      if (!soundEnabled || !voteSound || audio?.state !== 'running' || count < 1) return;
       let start = Math.max(audio.currentTime, nextAlertAt);
       for (let index = 0; index < count; index += 1) {
         const alert = audio.createBufferSource();
