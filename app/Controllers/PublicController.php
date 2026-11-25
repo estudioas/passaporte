@@ -190,19 +190,21 @@ final class PublicController
         if (!Settings::bool('page_voting_enabled', false)) {
             Response::json(['ok' => false, 'message' => 'A votação não está disponível.'], 403);
         }
+        $finalistId = filter_var($_POST['finalist_id'] ?? null, FILTER_VALIDATE_INT);
+        $attempt = $finalistId > 0 ? ['finalist_id' => $finalistId] : [];
         if (!Csrf::verify($_POST['_csrf'] ?? null)) {
-            Audit::log('vote.rejected', ['reason' => 'csrf'], 'visitor', null, 70);
+            Audit::log('vote.rejected', ['reason' => 'csrf'] + $attempt, 'visitor', null, 70);
             Response::json(['ok' => false, 'message' => 'Sessão expirada. Atualize a página.'], 419);
         }
 
         $risk = 0;
         $signals = [];
         if (trim((string) ($_POST['website'] ?? '')) !== '') {
-            Audit::log('vote.rejected', ['reason' => 'honeypot', 'signals' => ['honeypot']], 'visitor', null, 100);
+            Audit::log('vote.rejected', ['reason' => 'honeypot', 'signals' => ['honeypot']] + $attempt, 'visitor', null, 100);
             Response::json(['ok' => false, 'message' => 'Não foi possível validar esta participação.'], 422);
         }
         if (($_POST['terms_accepted'] ?? '') !== '1') {
-            Audit::log('vote.rejected', ['reason' => 'terms_not_accepted'], 'visitor', null, 40);
+            Audit::log('vote.rejected', ['reason' => 'terms_not_accepted'] + $attempt, 'visitor', null, 40);
             Response::json(['ok' => false, 'message' => 'Aceite o regulamento e o aviso de privacidade para confirmar.'], 422);
         }
         $verificationValid = Turnstile::configured()
@@ -211,15 +213,15 @@ final class PublicController
         if (!$verificationValid) {
             $risk = max($risk, 75);
             $signals[] = Turnstile::configured() ? 'turnstile_failed' : 'captcha_failed';
-            Audit::log('vote.rejected', ['reason' => Turnstile::configured() ? 'turnstile' : 'captcha', 'signals' => $signals], 'visitor', null, $risk);
+            Audit::log('vote.rejected', ['reason' => Turnstile::configured() ? 'turnstile' : 'captcha', 'signals' => $signals] + $attempt, 'visitor', null, $risk);
             Response::json(['ok' => false, 'message' => 'Não foi possível concluir a verificação automática. Tente novamente.'], 422);
         }
         if (!Geo::isBrazil()) {
-            Audit::log('vote.rejected', ['reason' => 'country', 'country' => Geo::countryCode()], 'visitor', null, 100);
+            Audit::log('vote.rejected', ['reason' => 'country', 'country' => Geo::countryCode()] + $attempt, 'visitor', null, 100);
             Response::json(['ok' => false, 'message' => 'A votação está disponível somente no Brasil.'], 403);
         }
         if (!Campaign::isVotingOpen()) {
-            Audit::log('vote.rejected', ['reason' => 'period'], 'visitor');
+            Audit::log('vote.rejected', ['reason' => 'period'] + $attempt, 'visitor');
             Response::json(['ok' => false, 'message' => 'A votação não está aberta neste momento.'], 403);
         }
         if (Security::isSuspiciousUserAgent()) {
@@ -256,7 +258,6 @@ final class PublicController
             $signals[] = 'too_fast';
         }
         $risk = min(100, $risk);
-        $finalistId = filter_var($_POST['finalist_id'] ?? null, FILTER_VALIDATE_INT);
         if (!$finalistId) {
             Response::json(['ok' => false, 'message' => 'Escolha um projeto finalista.'], 422);
         }
@@ -283,8 +284,8 @@ final class PublicController
                     $ipCount = $pdo->prepare('SELECT COUNT(*) FROM votes WHERE ip_hash = ?');
                     $ipCount->execute([Security::ipHash()]);
                     if ((int) $ipCount->fetchColumn() >= $limit) {
-                        Audit::log('vote.rejected', ['reason' => 'ip_limit'], 'visitor', null, 90, $pdo);
-                        throw new RuntimeException('Limite de votos desta rede atingido.');
+                        Audit::log('vote.rejected', ['reason' => 'ip_limit', 'finalist_id' => $finalistId], 'visitor', null, 90, $pdo);
+                        return ['ip_limit' => true];
                     }
                 }
 
@@ -319,8 +320,11 @@ final class PublicController
             Response::json(['ok' => false, 'message' => 'Não foi possível registrar o voto. Tente novamente.'], 500);
         }
 
+        if (!empty($result['ip_limit'])) {
+            Response::json(['ok' => false, 'message' => 'Limite de votos desta rede atingido.'], 409);
+        }
         if ($result['duplicate']) {
-            Audit::log('vote.duplicate', ['receipt' => $result['receipt']], 'visitor', null, 45);
+            Audit::log('vote.duplicate', ['receipt' => $result['receipt']] + $attempt, 'visitor', null, 45);
             Response::json(['ok' => false, 'duplicate' => true, 'receipt' => $result['receipt'], 'message' => 'Este dispositivo já confirmou um voto.'], 409);
         }
         unset($_SESSION['vote_page_at']);

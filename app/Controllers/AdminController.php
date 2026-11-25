@@ -18,11 +18,14 @@ use App\Core\Security;
 use App\Core\Settings;
 use App\Core\Turnstile;
 use App\Core\View;
+use PDO;
 use RuntimeException;
 use Throwable;
 
 final class AdminController
 {
+    private const HIGH_RISK_RECENT = 'risk_score >= 60 AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)';
+
     public function login(): void
     {
         if (Auth::user()) {
@@ -77,7 +80,7 @@ final class AdminController
             'valid_votes' => $total,
             'accesses_24h' => (int) $pdo->query('SELECT COUNT(*) FROM audit_events WHERE event_type = "http.request" AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)')->fetchColumn(),
             'review_queue' => (int) $pdo->query('SELECT COUNT(*) FROM votes WHERE status = "review"')->fetchColumn(),
-            'high_risk_24h' => (int) $pdo->query('SELECT COUNT(*) FROM audit_events WHERE risk_score >= 60 AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)')->fetchColumn(),
+            'high_risk_24h' => (int) $pdo->query('SELECT COUNT(*) FROM audit_events WHERE ' . self::HIGH_RISK_RECENT)->fetchColumn(),
 
         ];
         $analyticsReady = Auth::can('analytics', $user) && Analytics::ready();
@@ -705,7 +708,9 @@ final class AdminController
         $eventType = is_string($_GET['event'] ?? null) ? mb_substr(trim($_GET['event']), 0, 100) : '';
         $ip = is_string($_GET['ip'] ?? null) ? trim($_GET['ip']) : '';
         $range = Analytics::range($_GET);
-        $where = ['created_at >= ?', 'created_at < ?']; $params = [$range['start'], $range['until']];
+        $highRiskRecent = ($_GET['alertas'] ?? null) === '24h';
+        $where = $highRiskRecent ? [self::HIGH_RISK_RECENT] : ['created_at >= ?', 'created_at < ?'];
+        $params = $highRiskRecent ? [] : [$range['start'], $range['until']];
         if ($eventType !== '') { $where[] = 'event_type = ?'; $params[] = $eventType; }
         if ($ip !== '') { $where[] = 'ip_hash = ?'; $params[] = Security::secretHash($ip); }
         $clause = ' WHERE ' . implode(' AND ', $where);
@@ -714,8 +719,26 @@ final class AdminController
         $stmt = $pdo->prepare('SELECT id, event_type, actor_type, actor_id, country_code, risk_score, request_method, request_path, metadata_json, entry_hash, created_at FROM audit_events' . $clause . ' ORDER BY id DESC LIMIT 50 OFFSET ' . $eventPager['offset']);
         $stmt->execute($params);
         $events = array_map(static fn ($row) => Analytics::eventDetails($row, Auth::can('view_ips', $user)), $stmt->fetchAll());
+        $finalistTitles = [];
+        $attemptedIds = [];
+        foreach ($events as $index => $event) {
+            if (in_array($event['event_type'], ['vote.rejected', 'vote.duplicate'], true)) {
+                $metadata = json_decode($event['metadata_json'], true);
+                $id = $metadata['finalist_id'] ?? null;
+                if (is_int($id) && $id > 0) {
+                    $attemptedIds[$index] = $id;
+                }
+            }
+        }
+        if ($attemptedIds) {
+            $ids = array_values(array_unique($attemptedIds));
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $stmt = $pdo->prepare("SELECT id, project_title FROM finalists WHERE id IN ($placeholders)");
+            $stmt->execute($ids);
+            $finalistTitles = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+        }
         $chain = ($_GET['verify'] ?? '') === '1' ? Audit::verifyChain() : null;
-        View::render('admin/audit', compact('user', 'votes', 'events', 'chain', 'votePager', 'eventPager', 'range', 'eventType', 'ip') + ['title' => 'Auditoria', 'filters' => compact('status', 'risk')], 'admin/layout');
+        View::render('admin/audit', compact('user', 'votes', 'events', 'chain', 'votePager', 'eventPager', 'range', 'eventType', 'ip', 'highRiskRecent', 'attemptedIds', 'finalistTitles') + ['title' => 'Auditoria', 'filters' => compact('status', 'risk')], 'admin/layout');
     }
 
     public function updateVote(): never
