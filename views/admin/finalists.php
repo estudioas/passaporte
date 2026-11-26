@@ -17,6 +17,7 @@
                         <div class="field-grid two">
                             <label>Profissional<input name="participant_name" value="<?= $h($row['participant_name']) ?>" required></label>
                             <label>Título do projeto<input name="project_title" value="<?= $h($row['project_title']) ?>" required></label>
+                            <label>Revestimento <span>Opcional. Informe o nome do piso.</span><input name="revestimento" value="<?= $h($row['revestimento']) ?>" maxlength="160"></label>
                             <label>URL da publicação no Instagram <span>Opcional. Use o link direto do post ou Reel.</span><input type="url" name="instagram_url" value="<?= $h($row['instagram_url']) ?>"></label>
                             <label>URL de embed <span>opcional</span><input type="url" name="instagram_embed_url" value="<?= $h($row['instagram_embed_url']) ?>"></label>
                             <label>Imagem externa de reserva <span>opcional</span><input type="url" name="fallback_image_url" value="<?= $h($row['fallback_image_url']) ?>"></label>
@@ -78,7 +79,7 @@
     <div class="panel-heading"><div><span>Novo</span><h2>Adicionar finalista</h2></div></div>
     <form action="/admin/finalistas/salvar" method="post" class="admin-form">
         <input type="hidden" name="_csrf" value="<?= $h(Csrf::token()) ?>">
-        <div class="field-grid two"><label>Profissional<input name="participant_name" required></label><label>Título do projeto<input name="project_title" required></label><label>URL da publicação no Instagram <span>Opcional. Use o link direto do post ou Reel.</span><input type="url" name="instagram_url" placeholder="https://www.instagram.com/p/..."></label><label>Imagem externa de reserva <span>opcional</span><input type="url" name="fallback_image_url"></label></div>
+        <div class="field-grid two"><label>Profissional<input name="participant_name" required></label><label>Título do projeto<input name="project_title" required></label><label>Revestimento <span>Opcional. Informe o nome do piso.</span><input name="revestimento" maxlength="160"></label><label>URL da publicação no Instagram <span>Opcional. Use o link direto do post ou Reel.</span><input type="url" name="instagram_url" placeholder="https://www.instagram.com/p/..."></label><label>Imagem externa de reserva <span>opcional</span><input type="url" name="fallback_image_url"></label></div>
         <label class="check-row"><input type="checkbox" name="active" value="1"><span>Ativar imediatamente</span></label>
         <button class="button primary">Adicionar finalista</button>
     </form>

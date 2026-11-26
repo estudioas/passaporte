@@ -78,6 +78,7 @@ final class PublicController
         }
         foreach ($finalists as &$finalist) {
             $finalist['images'] = $imagesByFinalist[(int) $finalist['id']] ?? [];
+            $finalist['revestimento'] = (string) Settings::get('finalist_revestimento_' . (int) $finalist['id'], '');
         }
         unset($finalist);
         $_SESSION['vote_page_at'] = time();

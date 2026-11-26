@@ -121,6 +121,7 @@ final class AdminController
         }
         foreach ($rows as &$row) {
             $row['images'] = $byFinalist[(int) $row['id']] ?? [];
+            $row['revestimento'] = (string) Settings::get('finalist_revestimento_' . (int) $row['id'], '');
         }
         unset($row);
         $maxSourceImageBytes = max(1048576, (int) Config::get('security.max_finalist_source_image_bytes', 33554432));
@@ -141,6 +142,11 @@ final class AdminController
         $participant = trim((string) ($_POST['participant_name'] ?? ''));
         $title = trim((string) ($_POST['project_title'] ?? ''));
         $instagram = trim((string) ($_POST['instagram_url'] ?? ''));
+        $revestimento = $_POST['revestimento'] ?? null;
+        if ($revestimento !== null && (!is_string($revestimento) || mb_strlen(trim($revestimento)) > 160)) {
+            $_SESSION['admin_error'] = 'Informe o revestimento em até 160 caracteres.';
+            Response::redirect('/admin/finalistas');
+        }
         if ($participant === '' || $title === '' || ($instagram !== '' && !filter_var($instagram, FILTER_VALIDATE_URL))) {
             $_SESSION['admin_error'] = 'Preencha o nome e o projeto. Se informar uma publicação do Instagram, use uma URL válida.';
             Response::redirect('/admin/finalistas');
@@ -158,13 +164,18 @@ final class AdminController
         if ($id > 0) {
             $stmt = $pdo->prepare('UPDATE finalists SET participant_name = ?, project_title = ?, instagram_url = ?, instagram_embed_url = ?, fallback_image_url = ?, active = ?, sort_order = ?, updated_at = NOW() WHERE id = ?');
             $stmt->execute([$participant, $title, $instagram, $embed ?: null, $fallback ?: null, $active, (int) ($_POST['sort_order'] ?? 0), $id]);
-            Audit::log('admin.finalist_updated', ['finalist_id' => $id, 'active' => $active], 'admin', (int) $user['id']);
+            $event = 'admin.finalist_updated';
         } else {
             $slug = trim((string) preg_replace('/[^a-z0-9]+/', '-', iconv('UTF-8', 'ASCII//TRANSLIT', mb_strtolower($participant . '-' . $title)))) ?: 'finalista-' . time();
             $stmt = $pdo->prepare('INSERT INTO finalists (slug, participant_name, project_title, instagram_url, instagram_embed_url, fallback_image_url, active, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())');
             $stmt->execute([$slug, $participant, $title, $instagram, $embed ?: null, $fallback ?: null, $active, (int) ($_POST['sort_order'] ?? 0)]);
-            Audit::log('admin.finalist_created', ['finalist_id' => (int) $pdo->lastInsertId(), 'active' => $active], 'admin', (int) $user['id']);
+            $id = (int) $pdo->lastInsertId();
+            $event = 'admin.finalist_created';
         }
+        if (is_string($revestimento)) {
+            Settings::set('finalist_revestimento_' . $id, trim($revestimento));
+        }
+        Audit::log($event, ['finalist_id' => $id, 'active' => $active], 'admin', (int) $user['id']);
         $_SESSION['admin_message'] = 'Finalista salvo.';
         Response::redirect('/admin/finalistas');
     }

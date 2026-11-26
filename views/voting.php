@@ -68,7 +68,18 @@ $defaultImages = [
                     <?php endif; ?>
                 </div>
                 <button class="candidate-select" type="button" data-vote-choice="<?= (int) $finalist['id'] ?>" data-vote-label="<?= $h($finalist['project_title']) ?>" data-vote-social="<?= $h($instagramPost) ?>" aria-pressed="false" <?= $votingOpen ? '' : 'disabled' ?>>
-                    <div class="candidate-meta"><div><small>PROJETO</small><h3><?= $h($finalist['project_title']) ?></h3><p><?= $h($finalist['participant_name']) ?></p><strong class="candidate-select-label">Selecionar este projeto</strong></div><span class="candidate-radio" aria-hidden="true">✓</span></div>
+                    <div class="candidate-meta">
+                        <div>
+                            <small>PROJETO</small>
+                            <h3><?= $h($finalist['project_title']) ?></h3>
+                            <p><?= $h($finalist['participant_name']) ?></p>
+                            <?php if (!empty($finalist['revestimento'])): ?>
+                                <p><b>Revestimento</b> · <?= $h($finalist['revestimento']) ?></p>
+                            <?php endif; ?>
+                            <strong class="candidate-select-label">Selecionar este projeto</strong>
+                        </div>
+                        <span class="candidate-radio" aria-hidden="true">✓</span>
+                    </div>
                 </button>
             </article>
         <?php endforeach; ?>
