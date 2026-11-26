@@ -72,7 +72,7 @@ $defaultImages = [
                         <div>
                             <small>PROJETO</small>
                             <h3><?= $h($finalist['project_title']) ?></h3>
-                            <p><?= $h($finalist['participant_name']) ?></p>
+                            <p><b>Por</b> · <?= $h($finalist['participant_name']) ?></p>
                             <?php if (!empty($finalist['revestimento'])): ?>
                                 <p><b>Revestimento</b> · <?= $h($finalist['revestimento']) ?></p>
                             <?php endif; ?>
