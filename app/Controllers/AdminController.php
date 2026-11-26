@@ -23,7 +23,8 @@ use Throwable;
 
 final class AdminController
 {
-    private const HIGH_RISK_RECENT = 'risk_score >= 60 AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)';
+    private const HIGH_RISK = 'risk_score >= 60';
+    private const HIGH_RISK_RECENT = self::HIGH_RISK . ' AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)';
 
     public function login(): void
     {
@@ -721,8 +722,12 @@ final class AdminController
         $ip = is_string($_GET['ip'] ?? null) ? trim($_GET['ip']) : '';
         $range = Analytics::range($_GET);
         $highRiskRecent = ($_GET['alertas'] ?? null) === '24h';
+        $eventHighRisk = ($_GET['event_risk'] ?? null) === 'high';
         $where = $highRiskRecent ? [self::HIGH_RISK_RECENT] : ['created_at >= ?', 'created_at < ?'];
         $params = $highRiskRecent ? [] : [$range['start'], $range['until']];
+        if ($eventHighRisk && !$highRiskRecent) {
+            $where[] = self::HIGH_RISK;
+        }
         if ($eventType !== '') { $where[] = 'event_type = ?'; $params[] = $eventType; }
         if ($ip !== '') { $where[] = 'ip_hash = ?'; $params[] = Security::secretHash($ip); }
         $clause = ' WHERE ' . implode(' AND ', $where);
@@ -760,7 +765,7 @@ final class AdminController
             }
         }
         $chain = ($_GET['verify'] ?? '') === '1' ? Audit::verifyChain() : null;
-        View::render('admin/audit', compact('user', 'votes', 'events', 'chain', 'votePager', 'eventPager', 'range', 'eventType', 'ip', 'highRiskRecent', 'attemptedIds', 'finalistTitles', 'finalists', 'blockedByFinalist', 'blockedUnassigned') + ['title' => 'Auditoria', 'filters' => compact('status', 'risk')], 'admin/layout');
+        View::render('admin/audit', compact('user', 'votes', 'events', 'chain', 'votePager', 'eventPager', 'range', 'eventType', 'ip', 'highRiskRecent', 'eventHighRisk', 'attemptedIds', 'finalistTitles', 'finalists', 'blockedByFinalist', 'blockedUnassigned') + ['title' => 'Auditoria', 'filters' => compact('status', 'risk')], 'admin/layout');
     }
 
     public function updateVote(): never

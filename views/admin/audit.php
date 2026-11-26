@@ -5,8 +5,27 @@
 <section class="admin-panel" id="votos"><div class="panel-heading"><div><span>Votos confirmados</span><h2>Análise antifraude</h2></div><?php if (Auth::can('export_audit', $user)): ?><a class="button secondary small" href="/admin/auditoria/exportar">Exportar todos os logs CSV</a><?php endif; ?></div><form class="filter-bar" method="get"><label>Status<select name="status"><option value="">Todos</option><?php foreach(['valid'=>'Válido','review'=>'Em revisão','invalid'=>'Inválido'] as $v=>$label): ?><option value="<?= $v ?>" <?= $filters['status']===$v?'selected':'' ?>><?= $label ?></option><?php endforeach; ?></select></label><label>Risco mínimo<input type="number" min="0" max="100" name="risk" value="<?= (int)$filters['risk'] ?>"></label><button class="button secondary small">Filtrar</button></form><div class="table-wrap"><table><thead><tr><th>Comprovante</th><th>Projeto</th><th>Sinais</th><th>Aceite</th><th>IP completo e dispositivo</th><th>Data</th><th>Revisão</th></tr></thead><tbody><?php foreach($votes as $vote): ?><tr><td><code><?= $h($vote['receipt_code']) ?></code><br><span class="status-pill <?= $h($vote['status']) ?>"><?= $h($vote['status']) ?></span></td><td><?= $h($vote['project_title']) ?><br><small><?= $h($vote['participant_name']) ?></small></td><td><span class="risk risk-<?= (int)$vote['risk_score']>=60?'high':((int)$vote['risk_score']>=30?'medium':'low') ?>"><?= (int)$vote['risk_score'] ?></span><br><small><?= $h(implode(', ',json_decode((string)$vote['risk_signals_json'],true)?:[])) ?></small></td><td><?= $vote['terms_accepted'] ? 'Confirmado' : 'Registro anterior' ?><br><small><?= $vote['terms_version'] !== '' ? 'versão '.$h($vote['terms_version']) : 'sem versão' ?></small></td><td><code><?= $h($vote['ip_address']) ?></code><br><small><?= $h($vote['city']) ?> <?= $h($vote['region']) ?><br>dispositivo <?= $h(substr((string)$vote['device_hash'],0,10)) ?>…<br>rede <?= $h(substr((string)$vote['ip_hash'],0,10)) ?>… · <?= $h($vote['country_code']) ?></small></td><td><?= $h(date('d/m/Y H:i',strtotime((string)$vote['confirmed_at']))) ?></td><td><?php if (Auth::can('review_votes', $user)): ?><form action="/admin/auditoria/voto" method="post" class="review-form"><input type="hidden" name="_csrf" value="<?= $h(Csrf::token()) ?>"><input type="hidden" name="id" value="<?= (int)$vote['id'] ?>"><select name="status"><option value="valid">Validar</option><option value="review" <?= $vote['status']==='review'?'selected':'' ?>>Manter em revisão</option><option value="invalid" <?= $vote['status']==='invalid'?'selected':'' ?>>Invalidar</option></select><input name="notes" placeholder="Nota da revisão"><button>Salvar</button></form><?php else: ?>Somente leitura<?php endif; ?></td></tr><?php endforeach; ?></tbody></table></div></section>
 <?php $pager = $votePager; $anchor = 'votos'; $paginationLabel = 'Páginas de votos'; require __DIR__ . '/pagination.php'; ?>
 <section class="admin-panel" id="eventos"><div class="panel-heading"><div><span>Rastreabilidade</span><h2><?= $highRiskRecent ? 'Alertas de alto risco' : 'Log completo de eventos' ?></h2></div><small>50 eventos por página</small></div>
-<?php if ($highRiskRecent): ?><p>Eventos com risco de 60 pontos ou mais nas últimas 24 horas.</p><?php endif; ?>
-<form class="filter-bar" method="get" action="/admin/auditoria#eventos"><?php if ($highRiskRecent): ?><input type="hidden" name="alertas" value="24h"><?php else: ?><label>De<input type="date" name="start" value="<?= $h($range['start']) ?>"></label><label>Até<input type="date" name="end" value="<?= $h($range['end']) ?>"></label><?php endif; ?><label>Evento<input name="event" value="<?= $h($eventType) ?>" placeholder="Ex.: http.request"></label><label>IP completo<input name="ip" value="<?= $h($ip) ?>" placeholder="IPv4 ou IPv6"></label><button class="button secondary small">Filtrar logs</button><a href="/admin/auditoria#eventos">Limpar</a></form>
+<?php if ($highRiskRecent): ?>
+    <p>Eventos com risco de 60 pontos ou mais nas últimas 24 horas. <a href="/admin/auditoria?event_risk=high#eventos">Escolher outro período</a></p>
+<?php endif; ?>
+<form class="filter-bar" method="get" action="/admin/auditoria#eventos">
+    <?php if ($highRiskRecent): ?>
+        <input type="hidden" name="alertas" value="24h">
+    <?php else: ?>
+        <label>De<input type="date" name="start" value="<?= $h($range['start']) ?>"></label>
+        <label>Até<input type="date" name="end" value="<?= $h($range['end']) ?>"></label>
+        <label>Risco
+            <select name="event_risk">
+                <option value="">Todos</option>
+                <option value="high" <?= $eventHighRisk ? 'selected' : '' ?>>Alto risco (60 ou mais)</option>
+            </select>
+        </label>
+    <?php endif; ?>
+    <label>Evento<input name="event" value="<?= $h($eventType) ?>" placeholder="Ex.: http.request"></label>
+    <label>IP completo<input name="ip" value="<?= $h($ip) ?>" placeholder="IPv4 ou IPv6"></label>
+    <button class="button secondary small">Filtrar logs</button>
+    <a href="/admin/auditoria#eventos">Limpar</a>
+</form>
 <div class="table-wrap">
     <h3>Tentativas bloqueadas por finalista</h3>
     <p>Rejeições e tentativas de voto repetido no filtro atual do log. Esses eventos ficam fora da apuração.</p>

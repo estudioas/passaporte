@@ -1,5 +1,5 @@
 <?php
-$baseQuery = array_intersect_key($_GET, array_flip(['start', 'end', 'status', 'risk', 'event', 'ip', 'alertas', 'votes_page', 'events_page']));
+$baseQuery = array_intersect_key($_GET, array_flip(['start', 'end', 'status', 'risk', 'event', 'event_risk', 'ip', 'alertas', 'votes_page', 'events_page']));
 $link = static fn (int $page): string => '/admin/auditoria?' . http_build_query(array_merge($baseQuery, [$pager['key'] => $page])) . '#' . $anchor;
 ?>
 <nav class="log-pagination" aria-label="<?= $h($paginationLabel) ?>"><span><?= number_format($pager['total'], 0, ',', '.') ?> registros · Página <?= $pager['page'] ?> de <?= $pager['pages'] ?></span><div>
