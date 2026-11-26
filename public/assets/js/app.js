@@ -898,7 +898,7 @@
       if (resume && audio.state !== 'running') await audio.resume();
       if (!voteSound) {
         soundDownload ??= (async () => {
-          const response = await fetch('/assets/audio/voto.mp3');
+          const response = await fetch('/assets/audio/voto-estereo.mp3');
           if (!response.ok) throw new Error('Audio file unavailable');
           voteSound = await audio.decodeAudioData(await response.arrayBuffer());
         })();
