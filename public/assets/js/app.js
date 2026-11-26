@@ -26,12 +26,30 @@
     });
   });
 
-  const navToggle = document.querySelector('.nav-toggle');
-  const nav = document.querySelector('.main-nav');
-  navToggle?.addEventListener('click', () => {
-    const open = nav?.classList.toggle('open') ?? false;
-    navToggle.setAttribute('aria-expanded', String(open));
-  });
+  const siteHeader = document.querySelector('.site-header');
+  const navToggle = siteHeader?.querySelector('.nav-toggle');
+  const nav = siteHeader?.querySelector('#main-nav');
+  if (navToggle && nav) {
+    const setMenuOpen = (open) => navToggle.setAttribute('aria-expanded', String(open));
+    const isMenuOpen = () => navToggle.getAttribute('aria-expanded') === 'true';
+    navToggle.hidden = false;
+    siteHeader.dataset.mobileMenu = '';
+
+    navToggle.addEventListener('click', () => setMenuOpen(!isMenuOpen()));
+    nav.addEventListener('click', (event) => {
+      if (event.target.closest('a')) setMenuOpen(false);
+    });
+    document.addEventListener('click', (event) => {
+      if (!siteHeader.contains(event.target)) setMenuOpen(false);
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && isMenuOpen()) {
+        setMenuOpen(false);
+        navToggle.focus();
+      }
+    });
+    window.matchMedia('(max-width: 900px)').addEventListener?.('change', () => setMenuOpen(false));
+  }
 
   document.querySelectorAll('[data-carousel]').forEach((carousel) => {
     const slides = [...carousel.querySelectorAll('[data-carousel-slide]')];
